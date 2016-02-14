@@ -82,12 +82,28 @@ const parse = function(code) {
   };
 
   let index = 0;
+  let inlineComment = false;
   while (index < code.length) {
     const char = code[index];
     const nextChar = code[index + 1];
     const lastChar = code[index - 1];
     const parentTop = topToken(tokens, true); // top that can have children
     const top = topToken(tokens, false);
+
+    if (inlineComment) {
+      if (char === '\n') {
+        inlineComment = false;
+      }
+
+      index += 1;
+      continue;
+    } else {
+      if (char === '#') {
+        inlineComment = true;
+        index += 1;
+        continue;
+      }
+    }
 
     if (char === ' ' || char === '\n') {
       // Ignore indentation and line breaks, unless in a string.
@@ -433,6 +449,8 @@ if (false) {
 }
 
 const parsed = parse(`
+
+    # This is a comment
 
     print('Hello world!')
 
