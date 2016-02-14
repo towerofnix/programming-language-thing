@@ -424,11 +424,14 @@ console.log('\n'.repeat(100) + '%cRESTART', `font-size: 30px; color: white;
 
 const parsed = parse(`
 
-add1 -> fn(x) {
-  ^ add(x 1)
-}
+    print('Hello world!')
 
-print(add1(5))
+    add_one -> fn(x) {
+      ^ add(x 1)
+    }
+
+    print('The answer to life, the universe, and everything is:')
+    print(add_one(41))
 
 `);
 const result = interp2(parsed);
