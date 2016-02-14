@@ -1,11 +1,12 @@
 # Programming language thing
 
-This is a programming language thing (PLT). I created it. It's very new and
-probably not worth using, but it's a fun project for myself.
+This is a programming language thing (PLT). I created it. It's very new and probably not worth using, but it's a fun project for myself.
 
-PLT only works in Firefox Nightly from what I've tested. You can copy all the
-code in `main.js` to the [babel REPL](http://babeljs.io/repl) and it should
-also work.
+## Running
+
+**In your browser:** PLT only works in Firefox Nightly from what I've tested. You can copy all the code in `main.js` to the [babel REPL](http://babeljs.io/repl) and it should also work.
+
+**In [Node.js](https://nodejs.org/):** Run `npm install` initially and then `npm main.js` whenever you want to run it - fairly standard.
 
 ## Syntax
 
