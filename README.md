@@ -28,6 +28,15 @@ Simply put, here are all the pieces of syntax that matter to you:
 **Strings:** `'my_string'`
 **Numbers:** `123`
 **Variables:** `x -> 'baz'`
+**Comments:**
+
+    print('hello')
+    # This is a comment
+    print('okay')
+    #print('disabled code [for now]')
+
+Comments are marked by `#` and go to the end of the line.
+
 **Function expressions:** `fn(arg1 arg2 arg3...) {...}`
 
 Note because functions are expressions, you can assign them to variables:

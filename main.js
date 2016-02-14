@@ -98,7 +98,7 @@ const parse = function(code) {
       index += 1;
       continue;
     } else {
-      if (char === '#') {
+      if (top.type !== 'string' && char === '#') {
         inlineComment = true;
         index += 1;
         continue;
