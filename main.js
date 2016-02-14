@@ -1,3 +1,10 @@
+"use strict";
+
+if (typeof require !== 'undefined') {
+  var shim = require('es7-shim');
+  shim.shim();
+}
+
 const deepEqual = function(x, y) {
   // http://stackoverflow.com/a/32922084/4633828
   return (x && y && typeof x === 'object' && typeof y === 'object') ?
@@ -359,9 +366,9 @@ const interp2 = function(tokens, parentVariables) {
 const builtins = {
   print: toFunctionToken(token => {
       if (token.type === 'string' || token.type === 'number') {
-        console.log('{PRINT}', token.value);
+        console.log(token.value);
       } else {
-        console.log('{PRINT}', token);
+        console.log(token);
       }
     }),
   add: toFunctionToken(function({ value: x }, { value: y }) {
@@ -389,8 +396,8 @@ const builtins = {
       return {type: 'number', value: number};
     }),
   exp: toFunctionToken(function({ value: x }, { value: y }) {
-      const number = (
-        parseFloat(x) **
+      const number = Math.pow(
+        parseFloat(x),
         parseFloat(y));
       return {type: 'number', value: number};
     }),
@@ -419,8 +426,11 @@ const builtins = {
 
 `);*/
 
-console.log('\n'.repeat(100) + '%cRESTART', `font-size: 30px; color: white;
-  display: block; background: #333; padding: 10px;`);
+if (false) {
+  // separator between runs, useful for firefox
+  console.log('\n'.repeat(100) + '%cRESTART', `font-size: 30px; color: white;
+    display: block; background: #333; padding: 10px;`);
+}
 
 const parsed = parse(`
 
