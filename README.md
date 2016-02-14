@@ -1,5 +1,7 @@
 # Programming language thing
 
+[![Join the chat at https://gitter.im/liam4/programming-language-thing](https://badges.gitter.im/liam4/programming-language-thing.svg)](https://gitter.im/liam4/programming-language-thing?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 This is a programming language thing (PLT). I created it. It's very new and probably not worth using, but it's a fun project for myself.
 
 ## Running
