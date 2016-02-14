@@ -37,6 +37,8 @@ Simply put, here are all the pieces of syntax that matter to you:
 
 Comments are marked by `#` and go to the end of the line.
 
+[Multi-line comment syntax has not been decided on yet.](https://github.com/liam4/programming-language-thing/issues/2)
+
 **Function expressions:** `fn(arg1 arg2 arg3...) {...}`
 
 Note because functions are expressions, you can assign them to variables:
