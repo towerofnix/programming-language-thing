@@ -3,7 +3,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/liam4/programming-language-thing.git"
-  }
+  },
   "dependencies": {
     "es7-shim": "latest"
   }
