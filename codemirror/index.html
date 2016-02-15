@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8' />
+    <title>CodeMirror PLT Editor</title>
+    <link rel='stylesheet' href='codemirror.css' />
+    <script src='codemirror.js'></script>
+    <script src='../plt.js'></script>
+  </head>
+  <body>
+    <textarea id='ed'></textarea>
+    <textarea id='out'></textarea>
+    <script>
+
+      function delay(f) {
+        return function(...args) {
+          setTimeout(function() {
+            f(...args);
+          }, 1);
+        };
+      }
+
+      function run(cm) {
+        var result = '';
+        plt.init({
+          console: {log(what) {
+            result += what + '\n';
+            out.setValue(result);
+          }}
+        });
+        var code = cm.getValue();
+        var result = plt(code);
+      }
+
+      function save(cm) {
+        localStorage.save = cm.getValue();
+        alert('Saved!');
+      }
+
+      var editor = CodeMirror.fromTextArea(document.querySelector('#ed'), {
+        lineNumbers: true,
+        autofocus: true,
+        extraKeys: {
+          'Ctrl-Enter': delay(run),
+          'Cmd-Enter': delay(run),
+          'Cmd-S': delay(save),
+          'Ctrl-S': delay(save)
+        }
+      });
+
+      var out = CodeMirror.fromTextArea(document.querySelector('#out'), {
+        lineNumbers: false,
+        readOnly: true
+      });
+
+      if (localStorage.save_backup !== undefined && confirm('There is a save backup - load?')) {
+        editor.setValue(localStorage.save_backup);
+        localStorage.save = localStorage.save_backup;
+        localStorage.removeItem('save_backup');
+      } else {
+        editor.setValue(localStorage.save);
+      }
+
+      onbeforeunload = function() {
+        if (localStorage.save !== editor.getValue()) {
+          localStorage.save_backup = editor.getValue();
+        }
+      };
+    </script>
+  </body>
+</html>
