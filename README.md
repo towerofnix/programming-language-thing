@@ -8,7 +8,13 @@ This is a programming language thing (PLT). I created it. It's very new and prob
 
 #### In your browser:
 
-PLT only works in Firefox Nightly from what I've tested. You can copy all the code in `main.js` to the [babel REPL](http://babeljs.io/repl) and it should also work.
+PLT only works in Firefox Nightly from what I've tested. You can copy all the code in `plt.js` to the [babel REPL](http://babeljs.io/repl) and it should also work.
+
+Add this somewhere in your HTML file:
+
+	<script src="./plt.js"></script>
+
+Now you have access to `put`, as described later.
 
 #### In [Node.js](https://nodejs.org):
 
@@ -16,9 +22,52 @@ First install dependencies:
 
 	npm install
 
-Then to run:
+Then to run the workspace area:
 
-	node --harmony --harmony_destructuring --harmony_default_parameters main.js
+	node --harmony --harmony_destructuring --harmony_default_parameters workspace.js
+
+You can require it like so:
+
+	const put = require('./plt.js')
+
+Note you'll need to run `node` with all the Harmony V8 arguments (to add support for ES2016+).
+
+## A pit
+
+(i.e. Application Programming Interface Thing)
+
+PLT comes with a tiny API for running programs with JavaScript.
+
+**On browsers that support it,** you can just load `plt.js` with a `<script>` tag:
+
+	<script src="path/to/plt.js"></script>
+
+You'll probably need to build `plt.js` with Babel first, though. I'm a bit too lazy to do that for you, and if you're too lazy to do it as well, I've been developing PLT in [Firefox Nightly](https://nightly.mozilla.firefox) so opening `workspace.html` will work in that.
+
+**Using Node,** you'll need to initially run `node` with these arguments:
+
+	node --harmony --harmony_default_parameters --harmony_destructuring
+
+Then you can `require` PLT:
+
+	const plt = require('path/to/plt.js');
+
+---
+
+At this point you should have an object called `plt`. It's really a function with some properties `assign`ed, so you can treat as an object or a function.
+
+Here's a basic usage example:
+
+	plt(`# my program`)
+
+If you're interested in how it works, `plt` is a shortcut for this:
+
+* Parse the code - `parsed = parse(code)`
+* Interpret the parsed code - `result = interp(parsed)`
+* Return the result - `return result`
+
+`parse` and `interp` are available as methods of `plt`.
+
 
 ## Syntax
 
