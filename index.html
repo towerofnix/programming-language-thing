@@ -5,6 +5,28 @@
     <title>Hi</title>
   </head>
   <body>
-    <script src='main.js'></script>
+    <script src='plt.js'></script>
+    <script>
+      if (false) {
+        // Separator between runs, useful for debugging.
+        console.log('\n'.repeat(100) + '%cRESTART', `font-size: 30px;
+          color: white; display: block; background: #333; padding: 10px;`);
+      }
+
+      plt(`
+
+        # This is a comment
+
+        print('Hello world!')
+
+        add_one -> fn(x) {
+          ^ add(x 1)
+        }
+
+        print('The answer to life, the universe, and everything is:')
+        print(add_one(41))
+
+      `);
+    </script>
   </body>
 </html>
