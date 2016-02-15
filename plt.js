@@ -76,6 +76,8 @@
     const functionCode = functionExpr.code;
 
     // console.log('function code is', functionCode);
+
+    console.log('Call function', functionExpr, 'with arguments', args);
     let result;
     if (functionCode instanceof Function) {
       result = functionCode(...args);
@@ -99,10 +101,13 @@
     return result;
   }
 
-  const topToken = function(tokens, needsChildren) {
+  const topToken = function(tokens, needsChildren, pop) {
     let t = tokens[0];
     while (true) {
       if (t && t.value instanceof Array) {
+        if (t.value.includes(pop)) {
+          return t;
+        }
         const lastTokenInValue = t.value[t.value.length - 1];
         if (needsChildren && lastTokenInValue &&
             !(lastTokenInValue.value instanceof Array)) {
@@ -205,7 +210,15 @@
         }
       }
 
-      if (char == '\'') {
+      if (char === '.') {
+        const parent = topToken(tokens, true, top);
+        parent.value.pop(parent.value.indexOf(parent));
+        pushToken({type: 'object_dot', value: top});
+        index += 1;
+        continue;
+      }
+
+      if (char === '\'') {
         // If already in a string, close.
         // Else, start a string.
         if (top.type === 'string') {
@@ -235,14 +248,14 @@
   };
 
   const interp = function(tokens, parentVariables) {
-    // console.group('level of interp');
-
     // Allow just a token to be passed instead of an array of tokens.
     if (!(tokens instanceof Array)) {
       return interp([tokens], parentVariables);
     }
 
-    // console.log('interp was passed variables', parentVariables);
+    console.group('level of interp');
+
+    console.log('interp was passed variables', parentVariables);
     const variables = Object.assign({}, builtins, parentVariables);
     // console.log(printTokens(tokens))
     // console.log('--------');
@@ -270,8 +283,13 @@
 
     while (i < tokens.length) {
 
-      // console.log(i, tokens[i]);
-      // console.log(printTokens(tokens));
+      console.log(i, tokens[i]);
+      if (variables.o) {
+        console.log('o is', variables.o);
+      } else {
+        console.log('o not defined');
+      }
+      // console.dir(tokens);
 
       checkAssign();
 
@@ -287,6 +305,33 @@
         // insert all of the code at i.
         tokens.splice(i, 1, ...code);
 
+        continue;
+      }
+
+      if (tokens[i] && tokens[i + 2] && tokens[i + 3] &&
+          tokens[i].type === 'object_dot' &&
+          tokens[i + 1].type === 'text' &&
+          tokens[i + 2].type === 'text' && tokens[i + 2].value === '->') {
+        console.log('O-O');
+        const key = tokens[i + 1].value;
+        const obj = interp(tokens[i].value, variables)[0];
+        const val = interp(tokens[i + 3], variables);
+        console.log('set', key, 'of', obj, 'to', val);
+        obj.map.set(key, val);
+        console.log('now obj is', obj);
+        i += 3;
+        continue;
+      }
+
+      if (tokens[i] && tokens[i + 1] &&
+          tokens[i].type === 'object_dot' &&
+          tokens[i + 1].type === 'text') {
+        console.log('OHH MY GOODNESS', tokens[i].value);
+        const obj = interp(tokens[i].value, variables)[0];
+        const key = tokens[i + 1].value;
+        const value = obj.map.get(key);
+        returnTokens.push(value);
+        i += 2;
         continue;
       }
 
@@ -378,6 +423,9 @@
 
         const variableName = tokens[i].value;
 
+        console.log('Get variable', variableName);
+        console.log('My variables are', variables);
+
         if (variableName in variables) {
           const variableValue = variables[variableName];
           tokens.splice(i, 1, variableValue);
@@ -397,7 +445,7 @@
 
     // console.log('returned tokens:', returnTokens);
 
-    // console.groupEnd('level of interp');
+    console.groupEnd('level of interp');
 
     return returnTokens;
   };
@@ -407,10 +455,14 @@
   const builtins = {
     print: toFunctionToken(token => {
         if (token.type === 'string' || token.type === 'number') {
-          _console.log(token.value);
+          _console.log('(print)', token.value);
         } else {
-          _console.log(token);
+          _console.log('(print)', token);
         }
+      }),
+
+    obj: toFunctionToken(token => {
+        return {type: 'object', map: new Map};
       }),
 
     // Control structures -----------------------------------------------------
@@ -501,7 +553,7 @@
   // Exports.
   const exportModule = Object.assign(function plt(code) {
     return interp(parse(code));
-  }, {parse, interp, init});
+  }, {parse, interp, init, printTokens});
   const exportSpace = globalSpace;
   if (typeof module !== 'undefined') {
     module.exports = exportModule;
