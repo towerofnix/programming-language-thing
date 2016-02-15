@@ -138,6 +138,8 @@
         }
       }
 
+      // console.log(index, `{${char}}`, top);
+
       if (char === ' ' || char === '\n' || char === '\t') {
         // Ignore indentation and line breaks, unless in a string.
         if (!(top.type === 'string')) {
@@ -375,6 +377,20 @@
           _console.log(token.value);
         } else {
           _console.log(token);
+        }
+      }),
+    'if': toFunctionToken((n, fn) => {
+        if (n.type === 'number' && n.value != 0) {
+          callFunction(fn);
+        }
+      }),
+    'ifel': toFunctionToken((n, ifFn, elseFn) => {
+        if (n.type === 'number') {
+          if (n.value == 0) {
+            callFunction(elseFn);
+          } else {
+            callFunction(ifFn);
+          }
         }
       }),
     add: toFunctionToken(function({ value: x }, { value: y }) {
