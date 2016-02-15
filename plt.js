@@ -46,6 +46,10 @@
     };
   };
 
+  const toNumberToken = function(n) {
+    return {type: 'number', value: +n};
+  }
+
   const printTokens = function(tokens, indent = 1) {
     return JSON.stringify(tokens, [
       // General tokens
@@ -383,77 +387,77 @@
     // Control structures -----------------------------------------------------
     // See also: #5
     'if': toFunctionToken((n, fn) => {
-        if (n.type === 'number' && n.value != 0) {
+        if (!!+n.value) {
           callFunction(fn);
         }
       }),
     ifel: toFunctionToken((n, ifFn, elseFn) => {
-        if (+(n.value) === 0) {
-          return callFunction(elseFn);
-        } else {
+        if (!!+n.value) {
           return callFunction(ifFn);
+        } else {
+          return callFunction(elseFn);
         }
       }),
 
     // Comparison operators ---------------------------------------------------
     // See also: #6
     gt: toFunctionToken((x, y) => {
-        return +(x.value) > +(y.value);
+        return toNumberToken(+x.value > +y.value);
       }),
     lt: toFunctionToken((x, y) => {
-        return +(x.value) < +(y.value);
+        return toNumberToken(x.value < y.value);
       }),
     eq: toFunctionToken((x, y) => {
-        return +(x.value) === +(y.value);
+        return toNumberToken(x.value === y.value);
       }),
 
     // Boolean operators ------------------------------------------------------
     // See also: #6
     not: toFunctionToken((x) => {
-        return +!+x.value;
+        return toNumberToken(+!+x.value);
       }),
     and: toFunctionToken((x, y) => {
-        return +(+x.value && +y.value);
+        return toNumberToken(+x.value && +y.value);
       }),
     or: toFunctionToken((x, y) => {
-        return +(+x.value || +y.value);
+        return toNumberToken(+x.value || +y.value);
       }),
 
     add: toFunctionToken(function({ value: x }, { value: y }) {
         const number = (
           parseFloat(x) +
           parseFloat(y));
-        return {type: 'number', value: number};
+        return toNumberToken(number);
       }),
     subtract: toFunctionToken(function({ value: x }, { value: y }) {
         const number = (
           parseFloat(x) -
           parseFloat(y));
-        return {type: 'number', value: number};
+        return toNumberToken(number);
       }),
     multiply: toFunctionToken(function({ value: x }, { value: y }) {
         const number = (
           parseFloat(x) *
           parseFloat(y));
-        return {type: 'number', value: number};
+        return toNumberToken(number);
       }),
     divide: toFunctionToken(function({ value: x }, { value: y }) {
         const number = (
           parseFloat(x) /
           parseFloat(y));
-        return {type: 'number', value: number};
+        return toNumberToken(number);
       }),
     exp: toFunctionToken(function({ value: x }, { value: y }) {
         const number = Math.pow(
           parseFloat(x),
           parseFloat(y));
-        return {type: 'number', value: number};
+        return toNumberToken(number);
       }),
     mod: toFunctionToken(function({ value: x }, { value: y }) {
         const number = (
           parseFloat(x) %
           parseFloat(y));
-        return {type: 'number', value: number};
+        return toNumberToken(number);
       })
   };
 
