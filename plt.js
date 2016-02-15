@@ -229,9 +229,6 @@
   };
 
   const interp = function(tokens, parentVariables) {
-    // Interpret v2.0 - Merging it all into one function.(TM)
-    // (just kidding)
-
     // console.group('level of interp');
 
     // Allow just a token to be passed instead of an array of tokens.
