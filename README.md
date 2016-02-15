@@ -32,7 +32,7 @@ You can require it like so:
 
 Note you'll need to run `node` with all the Harmony V8 arguments (to add support for ES2016+).
 
-## A pit
+## A pit (but no fall)
 
 (i.e. Application Programming Interface Thing)
 
