@@ -68,6 +68,9 @@ If you're interested in how it works, `plt` is a shortcut for this:
 
 `parse` and `interp` are available as methods of `plt`.
 
+There's also another method called `init`, which initializes variables PLT will need. It takes an object as it's parameter, which can have these properties:
+
+* `console = window.console`: The console to log to. Needs to implement a method called `log`.
 
 ## Syntax
 
