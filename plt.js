@@ -387,13 +387,11 @@
           callFunction(fn);
         }
       }),
-    'ifel': toFunctionToken((n, ifFn, elseFn) => {
-        if (n.type === 'number') {
-          if (n.value == 0) {
-            callFunction(elseFn);
-          } else {
-            callFunction(ifFn);
-          }
+    ifel: toFunctionToken((n, ifFn, elseFn) => {
+        if (+(n.value) === 0) {
+          return callFunction(elseFn);
+        } else {
+          return callFunction(ifFn);
         }
       }),
 
