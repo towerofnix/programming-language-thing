@@ -6,9 +6,19 @@ This is a programming language thing (PLT). I created it. It's very new and prob
 
 ## Running
 
-**In your browser:** PLT only works in Firefox Nightly from what I've tested. You can copy all the code in `main.js` to the [babel REPL](http://babeljs.io/repl) and it should also work.
+#### In your browser:
 
-**In [Node.js](https://nodejs.org/):** Run `npm install` initially and then `npm main.js` whenever you want to run it - fairly standard.
+PLT only works in Firefox Nightly from what I've tested. You can copy all the code in `main.js` to the [babel REPL](http://babeljs.io/repl) and it should also work.
+
+#### In [Node.js](https://nodejs.org):
+
+First install dependencies:
+
+	npm install
+
+Then to run:
+
+	node --harmony --harmony_destructuring --harmony_default_parameters main.js
 
 ## Syntax
 
