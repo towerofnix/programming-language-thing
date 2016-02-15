@@ -10,6 +10,12 @@
   }
 
   let _console;
+  const globalSpace = (
+    typeof window !== 'undefined' ? window :
+      typeof global !== 'undefined' ? global :
+      typeof GLOBAL !== 'undefined' ? GLOBAL :
+      {}
+  );
 
   const deepEqual = function(x, y) {
     // http://stackoverflow.com/a/32922084/4633828
@@ -486,7 +492,7 @@
 
   const init = function(args) {
     if (typeof args === 'undefined') args = {};
-    if (!('console' in args)) args['console'] = window.console;
+    if (!('console' in args)) args['console'] = globalSpace.console;
     _console = args['console'];
   };
 
@@ -496,12 +502,7 @@
   const exportModule = Object.assign(function plt(code) {
     return interp(parse(code));
   }, {parse, interp, init});
-  const exportSpace = (
-    typeof window !== 'undefined' ? window :
-    typeof global !== 'undefined' ? global :
-    typeof GLOBAL !== 'undefined' ? GLOBAL :
-    {}
-  );
+  const exportSpace = globalSpace;
   if (typeof module !== 'undefined') {
     module.exports = exportModule;
   } else if (exportSpace !== '{}') {
