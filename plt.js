@@ -379,6 +379,9 @@
           _console.log(token);
         }
       }),
+
+    // Control structures -----------------------------------------------------
+    // See also: #5
     'if': toFunctionToken((n, fn) => {
         if (n.type === 'number' && n.value != 0) {
           callFunction(fn);
@@ -393,6 +396,18 @@
           }
         }
       }),
+
+    // Comparison operators ---------------------------------------------------
+    gt: toFunctionToken((x, y) => {
+        return +(x.value) > +(y.value);
+      }),
+    lt: toFunctionToken((x, y) => {
+        return +(x.value) < +(y.value);
+      }),
+    eq: toFunctionToken((x, y) => {
+        return +(x.value) === +(y.value);
+      }),
+
     add: toFunctionToken(function({ value: x }, { value: y }) {
         const number = (
           parseFloat(x) +
