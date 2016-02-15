@@ -9,6 +9,8 @@
     shim.shim();
   }
 
+  let _console;
+
   const deepEqual = function(x, y) {
     // http://stackoverflow.com/a/32922084/4633828
     return (x && y && typeof x === 'object' && typeof y === 'object') ?
@@ -364,9 +366,9 @@
   const builtins = {
     print: toFunctionToken(token => {
         if (token.type === 'string' || token.type === 'number') {
-          console.log(token.value);
+          _console.log(token.value);
         } else {
-          console.log(token);
+          _console.log(token);
         }
       }),
     add: toFunctionToken(function({ value: x }, { value: y }) {
@@ -407,10 +409,18 @@
       })
   };
 
+  const init = function(args) {
+    if (typeof args === 'undefined') args = {};
+    if (!('console' in args)) args['console'] = window.console;
+    _console = args['console'];
+  };
+
+  init();
+
   // Exports.
   const exportModule = Object.assign(function plt(code) {
     return interp(parse(code));
-  }, {parse, interp});
+  }, {parse, interp, init});
   const exportSpace = (
     typeof window !== 'undefined' ? window :
     typeof global !== 'undefined' ? global :
