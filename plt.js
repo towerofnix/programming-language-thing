@@ -396,6 +396,7 @@
       }),
 
     // Comparison operators ---------------------------------------------------
+    // See also: #6
     gt: toFunctionToken((x, y) => {
         return +(x.value) > +(y.value);
       }),
@@ -404,6 +405,18 @@
       }),
     eq: toFunctionToken((x, y) => {
         return +(x.value) === +(y.value);
+      }),
+
+    // Boolean operators ------------------------------------------------------
+    // See also: #6
+    not: toFunctionToken((x) => {
+        return +!+x.value;
+      }),
+    and: toFunctionToken((x, y) => {
+        return +(+x.value && +y.value);
+      }),
+    or: toFunctionToken((x, y) => {
+        return +(+x.value || +y.value);
       }),
 
     add: toFunctionToken(function({ value: x }, { value: y }) {
