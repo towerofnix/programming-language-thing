@@ -111,7 +111,7 @@
         }
       }
 
-      if (char === ' ' || char === '\n') {
+      if (char === ' ' || char === '\n' || char === '\t') {
         // Ignore indentation and line breaks, unless in a string.
         if (!(top.type === 'string')) {
           if (top.type === 'text' || top.type === 'number') {
