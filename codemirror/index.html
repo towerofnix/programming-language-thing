@@ -11,6 +11,7 @@
     <textarea id='ed'></textarea>
     <textarea id='out'></textarea>
     <script>
+
       function delay(f) {
         return function(...args) {
           setTimeout(function() {
@@ -20,6 +21,13 @@
       }
 
       function run(cm) {
+        var result = '';
+        plt.init({
+          console: {log(what) {
+            result += what + '\n';
+            out.setValue(result);
+          }}
+        });
         var code = cm.getValue();
         var result = plt(code);
       }
@@ -45,21 +53,19 @@
         readOnly: true
       });
 
-      save_label: {
-        if (localStorage.save_backup !== undefined && confirm('There is a save backup - load?')) {
-          editor.setValue(localStorage.save_backup);
-          localStorage.save = localStorage.save_backup;
-          localStorage.removeItem('save_backup');
-        } else {
-          editor.setValue(localStorage.save);
-        }
+      if (localStorage.save_backup !== undefined && confirm('There is a save backup - load?')) {
+        editor.setValue(localStorage.save_backup);
+        localStorage.save = localStorage.save_backup;
+        localStorage.removeItem('save_backup');
+      } else {
+        editor.setValue(localStorage.save);
       }
 
       onbeforeunload = function() {
         if (localStorage.save !== editor.getValue()) {
           localStorage.save_backup = editor.getValue();
         }
-      }
+      };
     </script>
   </body>
 </html>
