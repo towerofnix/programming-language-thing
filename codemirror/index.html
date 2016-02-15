@@ -21,7 +21,7 @@
       }
 
       function run(cm) {
-        var result = '';
+        var result = '(Start running)\n';
         plt.init({
           console: {log(...what) {
             console.log('(print)', ...what);
@@ -30,6 +30,7 @@
             out.setValue(result);
           }}
         });
+        out.setValue(result);
         var code = cm.getValue();
         var result = plt(code);
       }
