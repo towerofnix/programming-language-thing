@@ -23,8 +23,10 @@
       function run(cm) {
         var result = '';
         plt.init({
-          console: {log(what) {
-            result += what + '\n';
+          console: {log(...what) {
+            console.log('(print)', ...what);
+            result += what.map(
+              o=>typeof o==='object'?JSON.stringify(o):o).join(', ') + '\n';
             out.setValue(result);
           }}
         });
