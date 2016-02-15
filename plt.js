@@ -62,6 +62,33 @@
     ], indent);
   };
 
+  const callFunction = function(functionExpr, args) {
+    const functionCode = functionExpr.code;
+
+    // console.log('function code is', functionCode);
+    let result;
+    if (functionCode instanceof Function) {
+      result = functionCode(...args);
+    } else {
+      const functionArgs = functionExpr.args;
+      const functionScopeArgs = {};
+      // console.log('args are', args);
+      for (let [ i, argName ] of Object.entries(functionArgs)) {
+        const argValue = i in args ? args[i] : null;
+        functionScopeArgs[argName] = argValue;
+      }
+      // console.log('function scope args are', functionScopeArgs);
+
+      const functionScope = Object.assign(
+        {}, functionExpr.variables, functionScopeArgs);
+      // console.log('function scope is', functionScope);
+
+      result = interp(functionCode.value, functionScope);
+    }
+
+    return result;
+  }
+
   const topToken = function(tokens, needsChildren) {
     let t = tokens[0];
     while (true) {
@@ -293,28 +320,7 @@
         // console.groupEnd('argument list');
         // console.log('interpreted arguments are', args);
         // debugger;
-        const functionCode = functionExpr.code;
-
-        // console.log('function code is', functionCode);
-        let result;
-        if (functionCode instanceof Function) {
-          result = functionCode(...args);
-        } else {
-          const functionArgs = functionExpr.args;
-          const functionScopeArgs = {};
-          // console.log('args are', args);
-          for (let [ i, argName ] of Object.entries(functionArgs)) {
-            const argValue = i in args ? args[i] : null;
-            functionScopeArgs[argName] = argValue;
-          }
-          // console.log('function scope args are', functionScopeArgs);
-
-          const functionScope = Object.assign(
-            {}, functionExpr.variables, functionScopeArgs);
-          // console.log('function scope is', functionScope);
-
-          result = interp(functionCode.value, functionScope);
-        }
+        const result = callFunction(functionExpr, args);
 
         if (result.filter(isDefined).length) {
           tokens.splice(i, 2, ...result);
