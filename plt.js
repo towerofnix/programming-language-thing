@@ -247,18 +247,30 @@
     let returnTokens = [];
     let i = 0;
     let settingVariable = null;
+    let settingVariableType = null;
+
+    const checkAssign = function() {
+      if (settingVariableType && returnTokens.length) {
+        const value = returnTokens.pop();
+        if (settingVariableType === 'return') {
+          returnTokens = [value];
+        } else if (settingVariableType === 'assign') {
+          variables[settingVariable] = value;
+        } else if (settingVariableType === 'change') {
+          const variable = variables[settingVariable];
+          if (value.type === variable.type) {
+            Object.assign(variable, value);
+          }
+        }
+      }
+    }
+
     while (i < tokens.length) {
 
       // console.log(i, tokens[i]);
       // console.log(printTokens(tokens));
 
-      if (settingVariable && returnTokens.length) {
-        if (settingVariable === Symbol.for('return')) {
-          returnTokens = [returnTokens.pop()];
-        } else {
-          variables[settingVariable] = returnTokens.pop();
-        }
-      }
+      checkAssign();
 
       if (tokens[i] &&
           tokens[i].type === 'holder') {
@@ -280,9 +292,21 @@
           tokens[i + 1].type === 'text' && tokens[i + 1].value === '->') {
         // Variable set, i.e. `name -> value`.
         const variableName = tokens[i].value;
-        const variableValue = tokens[i + 2];
         variables[variableName] = null;
         settingVariable = variableName;
+        settingVariableType = 'assign';
+        i += 2;
+        continue;
+      }
+
+      // Change variable, see #7
+      if (tokens[i] && tokens[i + 1] &&
+          tokens[i].type     === 'text' &&
+          tokens[i + 1].type === 'text' && tokens[i + 1].value === '-=') {
+        const variableName = tokens[i].value;
+        settingVariable = variableName;
+        settingVariableType = 'change';
+        console.log('hmm', settingVariable);
         i += 2;
         continue;
       }
@@ -340,7 +364,7 @@
       if (tokens[i] && tokens[i + 1] &&
           tokens[i].type === 'text' && tokens[i].value === '^') {
         // Override return tokens with a new value;
-        settingVariable = Symbol.for('return');
+        settingVariableType = 'return';
         i += 1;
         continue;
       }
@@ -365,6 +389,8 @@
 
       i += 1;
     }
+
+    checkAssign();
 
     // console.log('returned tokens:', returnTokens);
 
