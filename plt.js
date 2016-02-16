@@ -283,12 +283,8 @@
         const value = returnTokens.pop();
         if (settingVariableType === 'return') {
           returnTokens = [value];
-<<<<<<< HEAD
         } else if (settingVariableType === 'object_property') {
           settingVariable[0].map.set(settingVariable[1], value);
-=======
-          settingVariableType = null;
->>>>>>> master
         } else if (settingVariableType === 'assign') {
           variables[settingVariable] = {value};
           settingVariableType = null;
