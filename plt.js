@@ -54,7 +54,11 @@
 
   const toNumberToken = function(n) {
     return {type: 'number', value: +n};
-  }
+  };
+
+  const toVariableToken = function(v) {
+    return {type: 'variable', value: v};
+  };
 
   const printTokens = function(tokens, indent = 1) {
     return JSON.stringify(tokens, [
@@ -239,7 +243,7 @@
         continue;
       }
 
-      if (top.type === 'string' || top.type === 'number' || 
+      if (top.type === 'string' || top.type === 'number' ||
           top.type === 'text') {
         top.value += char;
       } else {
@@ -279,15 +283,22 @@
         const value = returnTokens.pop();
         if (settingVariableType === 'return') {
           returnTokens = [value];
+<<<<<<< HEAD
         } else if (settingVariableType === 'object_property') {
           settingVariable[0].map.set(settingVariable[1], value);
+=======
+          settingVariableType = null;
+>>>>>>> master
         } else if (settingVariableType === 'assign') {
-          variables[settingVariable] = value;
+          variables[settingVariable] = {value};
+          settingVariableType = null;
         } else if (settingVariableType === 'change') {
           const variable = variables[settingVariable];
-          if (value.type === variable.type) {
-            Object.assign(variable, value);
-          }
+          // if (value.type === variable.type) {
+          //   Object.assign(variable, value);
+          // }
+          variables[settingVariable].value = value;
+          settingVariableType = null;
         }
       }
     }
@@ -352,8 +363,7 @@
 
       if (tokens[i] && tokens[i + 1] &&
           tokens[i].type     === 'text' &&
-          tokens[i + 1].type === 'text' && tokens[i + 1].value === '->') {
-        // Variable set, i.e. `name -> value`.
+          tokens[i + 1].type === 'text' && tokens[i + 1].value === '=>') {
         const variableName = tokens[i].value;
         variables[variableName] = null;
         settingVariable = variableName;
@@ -365,7 +375,7 @@
       // Change variable, see #7
       if (tokens[i] && tokens[i + 1] &&
           tokens[i].type     === 'text' &&
-          tokens[i + 1].type === 'text' && tokens[i + 1].value === '-=') {
+          tokens[i + 1].type === 'text' && tokens[i + 1].value === '->') {
         const variableName = tokens[i].value;
         settingVariable = variableName;
         settingVariableType = 'change';
@@ -441,7 +451,7 @@
         // console.log('My variables are', variables);
 
         if (variableName in variables) {
-          const variableValue = variables[variableName];
+          const variableValue = variables[variableName].value;
           tokens.splice(i, 1, variableValue);
           continue;
         } else {
@@ -467,8 +477,12 @@
 
   // ---
 
+  const toBuiltinFunction = function(f) {
+    return toVariableToken(toFunctionToken(f));
+  };
+
   const builtins = {
-    print: toFunctionToken(token => {
+    print: toBuiltinFunction(token => {
         if (token.type === 'string' || token.type === 'number') {
           _console.log('(print)', token.value);
         } else {
@@ -482,12 +496,12 @@
 
     // Control structures -----------------------------------------------------
     // See also: #5
-    'if': toFunctionToken((n, fn) => {
+    'if': toBuiltinFunction((n, fn) => {
         if (!!+n.value) {
           callFunction(fn);
         }
       }),
-    ifel: toFunctionToken((n, ifFn, elseFn) => {
+    ifel: toBuiltinFunction((n, ifFn, elseFn) => {
         if (!!+n.value) {
           return callFunction(ifFn);
         } else {
@@ -497,59 +511,59 @@
 
     // Comparison operators ---------------------------------------------------
     // See also: #6
-    gt: toFunctionToken((x, y) => {
+    gt: toBuiltinFunction((x, y) => {
         return toNumberToken(+x.value > +y.value);
       }),
-    lt: toFunctionToken((x, y) => {
+    lt: toBuiltinFunction((x, y) => {
         return toNumberToken(x.value < y.value);
       }),
-    eq: toFunctionToken((x, y) => {
+    eq: toBuiltinFunction((x, y) => {
         return toNumberToken(x.value === y.value);
       }),
 
     // Boolean operators ------------------------------------------------------
     // See also: #6
-    not: toFunctionToken((x) => {
+    not: toBuiltinFunction((x) => {
         return toNumberToken(+!+x.value);
       }),
-    and: toFunctionToken((x, y) => {
+    and: toBuiltinFunction((x, y) => {
         return toNumberToken(+x.value && +y.value);
       }),
-    or: toFunctionToken((x, y) => {
+    or: toBuiltinFunction((x, y) => {
         return toNumberToken(+x.value || +y.value);
       }),
 
-    add: toFunctionToken(function({ value: x }, { value: y }) {
+    add: toBuiltinFunction(function({ value: x }, { value: y }) {
         const number = (
           parseFloat(x) +
           parseFloat(y));
         return toNumberToken(number);
       }),
-    subtract: toFunctionToken(function({ value: x }, { value: y }) {
+    subtract: toBuiltinFunction(function({ value: x }, { value: y }) {
         const number = (
           parseFloat(x) -
           parseFloat(y));
         return toNumberToken(number);
       }),
-    multiply: toFunctionToken(function({ value: x }, { value: y }) {
+    multiply: toBuiltinFunction(function({ value: x }, { value: y }) {
         const number = (
           parseFloat(x) *
           parseFloat(y));
         return toNumberToken(number);
       }),
-    divide: toFunctionToken(function({ value: x }, { value: y }) {
+    divide: toBuiltinFunction(function({ value: x }, { value: y }) {
         const number = (
           parseFloat(x) /
           parseFloat(y));
         return toNumberToken(number);
       }),
-    exp: toFunctionToken(function({ value: x }, { value: y }) {
+    exp: toBuiltinFunction(function({ value: x }, { value: y }) {
         const number = Math.pow(
           parseFloat(x),
           parseFloat(y));
         return toNumberToken(number);
       }),
-    mod: toFunctionToken(function({ value: x }, { value: y }) {
+    mod: toBuiltinFunction(function({ value: x }, { value: y }) {
         const number = (
           parseFloat(x) %
           parseFloat(y));

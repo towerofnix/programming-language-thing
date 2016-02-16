@@ -78,7 +78,7 @@ Here's a simple example of a program written in PLT:
 
     print('Hello world!')
 
-    add_one -> fn(x) {
+    add_one => fn(x) {
       ^ add(x 1)
     }
 
@@ -89,7 +89,7 @@ Simply put, here are all the pieces of syntax that matter to you:
 
 **Strings:** `'my_string'`
 **Numbers:** `123`
-**Variables:** `x -> 'baz'`
+**Variables:** `x => 'baz'` `x` (see also: [Assign vs Change](doc/Assign vs Change.md))
 **Comments:**
 
     print('hello')
@@ -105,7 +105,7 @@ Comments are marked by `#` and go to the end of the line.
 
 Note because functions are expressions, you can assign them to variables:
 
-    foo -> fn() {
+    foo => fn() {
       ...
     }
 
