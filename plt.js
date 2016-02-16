@@ -221,7 +221,7 @@
         continue;
       }
 
-      if (top.type === 'string' || top.type === 'number' || 
+      if (top.type === 'string' || top.type === 'number' ||
           top.type === 'text') {
         top.value += char;
       } else {
