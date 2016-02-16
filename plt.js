@@ -77,7 +77,7 @@
 
     // console.log('function code is', functionCode);
 
-    console.log('Call function', functionExpr, 'with arguments', args);
+    // console.log('Call function', functionExpr, 'with arguments', args);
     let result;
     if (functionCode instanceof Function) {
       result = functionCode(...args);
@@ -153,7 +153,7 @@
         }
       }
 
-      // console.log(index, `{${char}}`, top);
+      console.log(top.type === 'sring', index, `{${char}}`, top);
 
       if (char === ' ' || char === '\n' || char === '\t') {
         // Ignore indentation and line breaks, unless in a string.
@@ -181,7 +181,9 @@
           if (parentTop.type === 'paren') {
             parentTop.done = true;
           } else {
+            console.error(printTokens(tokens));
             console.error('Invalid paren close');
+            debugger;
           }
           index += 1;
           continue;
@@ -203,7 +205,9 @@
           if (top.type === 'block') {
             top.done = true;
           } else {
+            console.error(printTokens(tokens));
             console.error('Invalid block close');
+            debugger;
           }
           index += 1;
           continue;
@@ -211,10 +215,12 @@
       }
 
       if (char === '.') {
-        const parent = topToken(tokens, true, top);
+        const parent = topToken(tokens, false, top);
         parent.value.pop(parent.value.indexOf(parent));
+        console.log('Pop', top, 'off of', parent.value);
         pushToken({type: 'object_dot', value: top});
-        index += 1;
+        console.log("It's a dot!");
+        index++;
         continue;
       }
 
@@ -253,9 +259,9 @@
       return interp([tokens], parentVariables);
     }
 
-    console.group('level of interp');
+    // console.group('level of interp');
 
-    console.log('interp was passed variables', parentVariables);
+    // console.log('interp was passed variables', parentVariables);
     const variables = Object.assign({}, builtins, parentVariables);
     // console.log(printTokens(tokens))
     // console.log('--------');
@@ -270,6 +276,8 @@
         const value = returnTokens.pop();
         if (settingVariableType === 'return') {
           returnTokens = [value];
+        } else if (settingVariableType === 'object_property') {
+          settingVariable[0].map.set(settingVariable[1], value);
         } else if (settingVariableType === 'assign') {
           variables[settingVariable] = value;
         } else if (settingVariableType === 'change') {
@@ -283,11 +291,11 @@
 
     while (i < tokens.length) {
 
-      console.log(i, tokens[i]);
+      // console.log(i, tokens[i]);
       if (variables.o) {
-        console.log('o is', variables.o);
+        // console.log('o is', variables.o);
       } else {
-        console.log('o not defined');
+        // console.log('o not defined');
       }
       // console.dir(tokens);
 
@@ -312,13 +320,10 @@
           tokens[i].type === 'object_dot' &&
           tokens[i + 1].type === 'text' &&
           tokens[i + 2].type === 'text' && tokens[i + 2].value === '->') {
-        console.log('O-O');
         const key = tokens[i + 1].value;
         const obj = interp(tokens[i].value, variables)[0];
-        const val = interp(tokens[i + 3], variables);
-        console.log('set', key, 'of', obj, 'to', val);
-        obj.map.set(key, val);
-        console.log('now obj is', obj);
+        settingVariableType = 'object_property';
+        settingVariable = [obj, key];
         i += 3;
         continue;
       }
@@ -326,7 +331,6 @@
       if (tokens[i] && tokens[i + 1] &&
           tokens[i].type === 'object_dot' &&
           tokens[i + 1].type === 'text') {
-        console.log('OHH MY GOODNESS', tokens[i].value);
         const obj = interp(tokens[i].value, variables)[0];
         const key = tokens[i + 1].value;
         const value = obj.map.get(key);
@@ -354,7 +358,6 @@
         const variableName = tokens[i].value;
         settingVariable = variableName;
         settingVariableType = 'change';
-        console.log('hmm', settingVariable);
         i += 2;
         continue;
       }
@@ -423,19 +426,20 @@
 
         const variableName = tokens[i].value;
 
-        console.log('Get variable', variableName);
-        console.log('My variables are', variables);
+        // console.log('Get variable', variableName);
+        // console.log('My variables are', variables);
 
         if (variableName in variables) {
           const variableValue = variables[variableName];
           tokens.splice(i, 1, variableValue);
           continue;
         } else {
-          console.log('variables are', variables);
+          // console.log('variables are', variables);
           throw `Variable ${variableName} is not defined`;
         }
       }
 
+      // console.log('return token:', tokens[i]);
       returnTokens.push(tokens[i]);
 
       i += 1;
@@ -445,7 +449,7 @@
 
     // console.log('returned tokens:', returnTokens);
 
-    console.groupEnd('level of interp');
+    // console.groupEnd('level of interp');
 
     return returnTokens;
   };
