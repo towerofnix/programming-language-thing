@@ -84,7 +84,7 @@
       const functionScopeArgs = {};
       // console.log('args are', args);
       for (let [ i, argName ] of Object.entries(functionArgs)) {
-        const argValue = i in args ? args[i] : null;
+        const argValue = i in args ? args[i] : undefined;
         functionScopeArgs[argName] = argValue;
       }
       // console.log('function scope args are', functionScopeArgs);
@@ -217,7 +217,7 @@
         continue;
       }
 
-      if (top.type === 'string' || top.type === 'number' || 
+      if (top.type === 'string' || top.type === 'number' ||
           top.type === 'text') {
         top.value += char;
       } else {
@@ -406,7 +406,9 @@
 
   const builtins = {
     print: toFunctionToken(token => {
-        if (token.type === 'string' || token.type === 'number') {
+        if(!token) {
+          _console.log(undefined);
+        } else if (token.type === 'string' || token.type === 'number') {
           _console.log(token.value);
         } else {
           _console.log(token);
@@ -415,7 +417,7 @@
 
     // Control structures -----------------------------------------------------
     // See also: #5
-    'if': toFunctionToken((n, fn) => {
+    if: toFunctionToken((n, fn) => {
         if (!!+n.value) {
           callFunction(fn);
         }
@@ -427,6 +429,11 @@
           return callFunction(elseFn);
         }
       }),
+    repeat: toFunctionToken((n, fn) => {
+      for(let i = 0; i < parseInt(n.value); i++) {
+        callFunction(fn, [toNumberToken(i)]);
+      }
+    }),
 
     // Comparison operators ---------------------------------------------------
     // See also: #6
