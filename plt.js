@@ -61,6 +61,9 @@
       // General tokens
       'type', 'value',
 
+      // Objects
+      'o',
+
       // Function call
       'name', 'args',
 
@@ -129,12 +132,12 @@
       topToken(tokens, true).value.push(token);
     };
 
-    let index = 0;
+    let i = 0;
     let inlineComment = false;
-    while (index < code.length) {
-      const char = code[index];
-      const nextChar = code[index + 1];
-      const lastChar = code[index - 1];
+    while (i < code.length) {
+      const char = code[i];
+      const nextChar = code[i + 1];
+      const lastChar = code[i - 1];
       const parentTop = topToken(tokens, true); // top that can have children
       const top = topToken(tokens, false);
 
@@ -143,17 +146,15 @@
           inlineComment = false;
         }
 
-        index += 1;
+        i += 1;
         continue;
       } else {
         if (top.type !== 'string' && char === '#') {
           inlineComment = true;
-          index += 1;
+          i += 1;
           continue;
         }
       }
-
-      console.log(top.type === 'sring', index, `{${char}}`, top);
 
       if (char === ' ' || char === '\n' || char === '\t') {
         // Ignore indentation and line breaks, unless in a string.
@@ -161,7 +162,7 @@
           if (top.type === 'text' || top.type === 'number') {
             top.done = true;
           }
-          index += 1;
+          i += 1;
           continue;
         }
       }
@@ -170,7 +171,7 @@
         // Begin a paren token, unless in a string.
         if (!(top.type === 'string')) {
           pushToken({type: 'paren', value: [], done: false});
-          index += 1;
+          i += 1;
           continue;
         }
       }
@@ -185,7 +186,7 @@
             console.error('Invalid paren close');
             debugger;
           }
-          index += 1;
+          i += 1;
           continue;
         }
       }
@@ -194,7 +195,7 @@
         // Begin a block token, unless in a string.
         if (!(top.type === 'string')) {
           pushToken({type: 'block', value: [], done: false});
-          index += 1;
+          i += 1;
           continue;
         }
       }
@@ -209,18 +210,20 @@
             console.error('Invalid block close');
             debugger;
           }
-          index += 1;
+          i += 1;
           continue;
         }
       }
 
       if (char === '.') {
-        const parent = topToken(tokens, false, top);
-        parent.value.pop(parent.value.indexOf(parent));
-        console.log('Pop', top, 'off of', parent.value);
-        pushToken({type: 'object_dot', value: top});
-        console.log("It's a dot!");
-        index++;
+        // const parent = topToken(tokens, false, top);
+        // parent.value.pop(parent.value.indexOf(top));
+        // const objectDot = {type: 'object_dot', o: top};
+        // console.log("It's a dot!", printTokens(objectDot));
+        // console.log('Pop', top, 'off of', parent.value);
+        const objectDot = {type: 'object_dot'};
+        pushToken(objectDot);
+        i += 1;
         continue;
       }
 
@@ -232,7 +235,7 @@
         } else {
           pushToken({type: 'string', value: '', done: false});
         }
-        index += 1;
+        i += 1;
         continue;
       }
 
@@ -247,7 +250,7 @@
         }
       }
 
-      index += 1;
+      i += 1;
     }
 
     return tokens;
@@ -259,7 +262,7 @@
       return interp([tokens], parentVariables);
     }
 
-    // console.group('level of interp');
+    console.group('level of interp');
 
     // console.log('interp was passed variables', parentVariables);
     const variables = Object.assign({}, builtins, parentVariables);
@@ -316,24 +319,32 @@
         continue;
       }
 
-      if (tokens[i] && tokens[i + 2] && tokens[i + 3] &&
+      // console.log(i, tokens[i]);
+      // console.log(tokens);
+      if (tokens[i - 1] && tokens[i] && tokens[i + 1] && tokens[i + 2] &&
+          tokens[i + 3] &&
           tokens[i].type === 'object_dot' &&
           tokens[i + 1].type === 'text' &&
           tokens[i + 2].type === 'text' && tokens[i + 2].value === '->') {
+        const obj = tokens[i - 1];
         const key = tokens[i + 1].value;
-        const obj = interp(tokens[i].value, variables)[0];
-        settingVariableType = 'object_property';
-        settingVariable = [obj, key];
-        i += 3;
+        const val = tokens[i + 3];
+        // console.log('set', key, 'of', obj, 'to', val);
+        obj.map.set(key, val);
+        i += 4;
         continue;
       }
 
-      if (tokens[i] && tokens[i + 1] &&
+      if (tokens[i - 1] && tokens[i] && tokens[i + 1] &&
           tokens[i].type === 'object_dot' &&
           tokens[i + 1].type === 'text') {
-        const obj = interp(tokens[i].value, variables)[0];
+        const obj = tokens[i - 1];
         const key = tokens[i + 1].value;
+        console.log('get', key, 'of', obj);
+        debugger;
         const value = obj.map.get(key);
+        console.log('value:', value);
+        returnTokens.pop();
         returnTokens.push(value);
         i += 2;
         continue;
@@ -395,11 +406,11 @@
         // TODO: do something related to function calling
 
         const functionExpr = tokens[i];
-        // console.log('function call:', functionExpr);
-        // console.group('argument list');
+        console.log('function call:', functionExpr);
+        console.group('argument list');
         const args = interp(tokens[i + 1].value, variables);
-        // console.groupEnd('argument list');
-        // console.log('interpreted arguments are', args);
+        console.groupEnd('argument list');
+        console.log('interpreted arguments are', args);
         // debugger;
         const result = callFunction(functionExpr, args);
 
@@ -449,7 +460,7 @@
 
     // console.log('returned tokens:', returnTokens);
 
-    // console.groupEnd('level of interp');
+    console.groupEnd('level of interp');
 
     return returnTokens;
   };
