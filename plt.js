@@ -272,12 +272,9 @@
 
     let returnTokens = [];
     let i = 0;
-    // let settingVariable = null;
-    // let settingVariableType = null;
     let setting = [];
 
     const checkAssign = function() {
-   // if (settingVariableType && returnTokens.length) {
       if (setting.length && returnTokens.length) {
         const settingA = setting.pop();
         const value = returnTokens.pop();
