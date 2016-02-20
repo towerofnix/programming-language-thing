@@ -1,7 +1,10 @@
-const plt = require('./plt');
+// const plt = require('./plt');
 
-plt(`
+console.log(plt(`
 
-  # Add your code here!
+  x => obj()
+  x.y => obj()
+  x.y.z => 42
+  x.y.z
 
-`);
+`));
