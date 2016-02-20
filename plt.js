@@ -289,6 +289,11 @@
           variables[settingData] = {value};
         } else if (settingType === 'change') {
           variables[settingData].value = value;
+        } else {
+          console.error('Invalid setting type:', settingType);
+          console.error('Would have attempted to set to value:', value);
+          console.error('Data was:', settingData);
+          throw new Error;
         }
       }
     }
@@ -346,8 +351,11 @@
 
       if (tokens[i] && tokens[i + 1] &&
           tokens[i].type === 'object_property' &&
-          tokens[i + 1].type === 'assign') {
+          tokens[i + 1].type === 'text' && tokens[i + 1].value === '=>') {
         console.log(':_:')
+        const objPropertyToken = tokens[i];
+        tokens.splice(i, 2);
+        setting.push([objPropertyToken, 'object_property']);
       }
 
       // Change variable, see #7
