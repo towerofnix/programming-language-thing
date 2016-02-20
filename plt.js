@@ -307,14 +307,6 @@
 
     while (i < tokens.length) {
 
-      // console.log(i, tokens[i]);
-      if (variables.o) {
-        // console.log('o is', variables.o);
-      } else {
-        // console.log('o not defined');
-      }
-      // console.dir(tokens);
-
       checkAssign();
 
       if (tokens[i] &&
@@ -333,16 +325,11 @@
       }
 
       console.log(i, tokens[i]);
-      // if (tokens[i].type === 'number' && tokens[i].value == '42') debugger;
-      // console.log(tokens);
-
       if (tokens[i] && tokens[i + 1] &&
           tokens[i].type     === 'text' &&
           tokens[i + 1].type === 'text' && tokens[i + 1].value === '=>') {
         const variableName = tokens[i].value;
         variables[variableName] = null;
-        // settingVariable = variableName;
-        // settingVariableType = 'assign';
         setting.push([variableName, 'assign']);
         i += 2;
         continue;
