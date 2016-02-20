@@ -223,6 +223,13 @@
         continue;
       }
 
+      if (char === ':') {
+        const objectColon = {type: 'object_colon'};
+        pushToken(objectColon);
+        i += 1;
+        continue;
+      }
+
       if (char === '\'') {
         // If already in a string, close.
         // Else, start a string.
