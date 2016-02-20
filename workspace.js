@@ -3,7 +3,8 @@
 console.log(plt(`
 
   x => obj()
-  x.y => 5
+  x.y => obj()
+  x.y.z => 42
   x.y.z
 
 `));
