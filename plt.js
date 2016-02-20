@@ -217,11 +217,6 @@
       }
 
       if (char === '.') {
-        // const parent = topToken(tokens, false, top);
-        // parent.value.pop(parent.value.indexOf(top));
-        // const objectDot = {type: 'object_dot', o: top};
-        // console.log("It's a dot!", printTokens(objectDot));
-        // console.log('Pop', top, 'off of', parent.value);
         const objectDot = {type: 'object_dot'};
         pushToken(objectDot);
         i += 1;
@@ -319,7 +314,7 @@
         continue;
       }
 
-      // console.log(i, tokens[i]);
+      console.log(i, tokens[i]);
       // debugger;
       if (tokens[i] && tokens[i + 1] &&
           tokens[i].type     === 'text' &&
