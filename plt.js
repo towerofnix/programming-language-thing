@@ -263,7 +263,7 @@
       return interp([tokens], parentVariables);
     }
 
-    console.group('level of interp');
+    // console.group('level of interp');
 
     // console.log('interp was passed variables', parentVariables);
     const variables = Object.assign({}, builtins, parentVariables);
@@ -286,6 +286,12 @@
           variables[settingData] = {value};
         } else if (settingType === 'change') {
           variables[settingData].value = value;
+        } else if (settingType === 'object_property') {
+          const obj = settingData.obj;
+          const key = settingData.key;
+          const map = obj.map;
+          map.set(key, value);
+          // Happy!
         } else {
           console.error('Invalid setting type:', settingType);
           console.error('Would have attempted to set to value:', value);
@@ -331,7 +337,10 @@
         const objToken = returnTokens.pop();
         const keyToken = tokens.splice(i + 1, 1)[0];
         if (!(objToken && objToken.type === 'object')) {
-          throw 'Token before dot is not object';
+          console.error('Token before dot is not object');
+          console.error(objToken);
+          debugger;
+          throw new Error;
         }
         if (!(keyToken && keyToken.type === 'text')) {
           console.error('Token after dot is not text');
@@ -349,10 +358,21 @@
       if (tokens[i] && tokens[i + 1] &&
           tokens[i].type === 'object_property' &&
           tokens[i + 1].type === 'text' && tokens[i + 1].value === '=>') {
-        console.log(':_:')
         const objPropertyToken = tokens[i];
         tokens.splice(i, 2);
         setting.push([objPropertyToken, 'object_property']);
+        continue;
+      }
+      else if (tokens[i] &&
+               tokens[i].type === 'object_property') {
+        const objPropertyToken = tokens[i];
+        // ES6 destructuring is failing me here, anybody know why? :(
+        const obj = objPropertyToken.obj;
+        const key = objPropertyToken.key;
+        const map = obj.map;
+        tokens.splice(i, 1);
+        returnTokens.push(map.get(key));
+        continue;
       }
 
       // Change variable, see #7
@@ -398,12 +418,7 @@
         // TODO: do something related to function calling
 
         const functionExpr = tokens[i];
-        console.log('function call:', functionExpr);
-        console.group('argument list');
         const args = interp(tokens[i + 1].value, variables);
-        console.groupEnd('argument list');
-        console.log('interpreted arguments are', args);
-        // debugger;
         const result = callFunction(functionExpr, args);
 
         if (result.filter(isDefined).length) {
@@ -449,7 +464,7 @@
 
     // console.log('returned tokens:', returnTokens);
 
-    console.groupEnd('level of interp');
+    // console.groupEnd('level of interp');
 
     return returnTokens;
   };
