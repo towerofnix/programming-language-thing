@@ -279,29 +279,17 @@
     const checkAssign = function() {
    // if (settingVariableType && returnTokens.length) {
       if (setting.length && returnTokens.length) {
-        console.log('CHECKING:', returnTokens);
         const settingA = setting.pop();
         const value = returnTokens.pop();
-        console.log('HEY!!! value:', value);
-        // console.log('kk, returnTokens: ', returnTokens);
         const settingData = settingA[0];
         const settingType = settingA[1];
         if (settingType === 'return') {
           returnTokens = [value];
         } else if (settingType === 'assign') {
           variables[settingData] = {value};
-          // settingVariableType = null;
         } else if (settingType === 'change') {
-          // const variable = variables[settingData];
-          // if (value.type === variable.type) {
-          //   Object.assign(variable, value);
-          // }
           variables[settingData].value = value;
-          // settingVariableType = null;
         }
-
-        console.log('aaand done, setting is', setting);
-        console.log('returnTokens is', returnTokens);
       }
     }
 
@@ -332,14 +320,14 @@
         const variableName = tokens[i].value;
         variables[variableName] = null;
         setting.push([variableName, 'assign']);
-        i += 2;
+        tokens.splice(i, 2);
         continue;
       }
 
       if (tokens[i] &&
           tokens[i].type === 'object_dot') {
         const objToken = returnTokens.pop();
-        const keyToken = tokens.pop(i + 1);
+        const keyToken = tokens.splice(i + 1, 1);
         if (!(objToken && objToken.type === 'object')) {
           throw 'Token before dot is not object';
         }
@@ -366,9 +354,8 @@
           tokens[i].type     === 'text' &&
           tokens[i + 1].type === 'text' && tokens[i + 1].value === '->') {
         const variableName = tokens[i].value;
-        settingVariable = variableName;
-        settingVariableType = 'change';
-        i += 2;
+        setting.push([variableName, 'change']);
+        tokens.splice(i, 2);
         continue;
       }
 
@@ -418,7 +405,6 @@
         } else {
           tokens.splice(i, 2);
         }
-        // i += 2;
         continue;
       };
 
@@ -426,7 +412,7 @@
           tokens[i].type === 'text' && tokens[i].value === '^') {
         // Override return tokens with a new value;
         settingVariableType = 'return';
-        i += 1;
+        tokens.splice(i, 1);
         continue;
       }
 
@@ -436,8 +422,8 @@
 
         const variableName = tokens[i].value;
 
-        // console.log('Get variable', variableName);
-        // console.log('My variables are', variables);
+        console.log('Get variable', variableName);
+        console.log('My variables are', variables);
 
         if (variableName in variables) {
           const variableValue = variables[variableName].value;
@@ -453,7 +439,7 @@
       // console.log('return token:', tokens[i]);
       returnTokens.push(tokens[i]);
 
-      i += 1;
+      tokens.splice(i, 1);
     }
 
     checkAssign();
