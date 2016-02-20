@@ -325,6 +325,7 @@
       }
 
       console.log(i, tokens[i]);
+      debugger;
       if (tokens[i] && tokens[i + 1] &&
           tokens[i].type     === 'text' &&
           tokens[i + 1].type === 'text' && tokens[i + 1].value === '=>') {
@@ -343,13 +344,21 @@
           throw 'Token before dot is not object';
         }
         if (!(keyToken && keyToken.type === 'text')) {
-          throw 'Token after dot is not text';
+          console.error('Token after dot is not text');
+          console.error(keyToken);
+          throw new Error;
         }
         const objPropertyToken = {
           type: 'object_property', obj: objToken, key: keyToken.value
         };
         tokens.splice(i, 1, objPropertyToken);
         continue;
+      }
+
+      if (tokens[i] && tokens[i + 1] &&
+          tokens[i].type === 'object_property' &&
+          tokens[i + 1].type === 'assign') {
+        console.log(':_:')
       }
 
       // Change variable, see #7

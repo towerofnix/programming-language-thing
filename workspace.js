@@ -3,6 +3,6 @@
 console.log(plt.printTokens(plt(`
 
   x => obj()
-  x.y
+  x.y => 5
 
 `)));
