@@ -335,6 +335,22 @@
         continue;
       }
 
+      if (tokens[i].type === 'object_dot') {
+        const objToken = returnTokens.pop();
+        const keyToken = tokens.pop(i + 1);
+        if (!(objToken.type === 'object')) {
+          throw 'Token before dot is not object';
+        }
+        if (!(keyToken.type === 'text')) {
+          throw 'Token after dot is not text';
+        }
+        const objPropertyToken = {
+          type: 'object_property', obj: objToken, key: keyToken.value
+        };
+        tokens.splice(i, 1, objPropertyToken);
+        continue;
+      }
+
       // Change variable, see #7
       if (tokens[i] && tokens[i + 1] &&
           tokens[i].type     === 'text' &&
