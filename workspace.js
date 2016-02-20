@@ -4,7 +4,7 @@ console.log(plt.printTokens(plt(`
 
   x => 5
   fn() {
-    x -> 4
+    x => 4
     print(x)
   }()
   print(x)

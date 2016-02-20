@@ -312,8 +312,8 @@
         continue;
       }
 
-      console.log(i, tokens[i]);
-      debugger;
+      // console.log(i, tokens[i]);
+      // debugger;
       if (tokens[i] && tokens[i + 1] &&
           tokens[i].type     === 'text' &&
           tokens[i + 1].type === 'text' && tokens[i + 1].value === '=>') {
