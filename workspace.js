@@ -2,9 +2,9 @@
 
 console.log(plt(`
 
-  x => obj()
-  x.y => obj()
-  x.y.z => 42
-  x.y.z
+  o => obj()
+  k => 'key'
+  o:k => 'Hello!'
+  print(o.k)
 
 `));

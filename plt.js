@@ -263,7 +263,7 @@
       return interp([tokens], parentVariables);
     }
 
-    // console.group('level of interp');
+    console.group('level of interp');
 
     // console.log('interp was passed variables', parentVariables);
     const variables = Object.assign({}, builtins, parentVariables);
@@ -291,7 +291,6 @@
           const key = settingData.key;
           const map = obj.map;
           map.set(key, value);
-          // Happy!
         } else {
           console.error('Invalid setting type:', settingType);
           console.error('Would have attempted to set to value:', value);
@@ -464,7 +463,7 @@
 
     // console.log('returned tokens:', returnTokens);
 
-    // console.groupEnd('level of interp');
+    console.groupEnd('level of interp');
 
     return returnTokens;
   };
