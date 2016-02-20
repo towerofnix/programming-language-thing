@@ -327,13 +327,14 @@
       if (tokens[i] &&
           tokens[i].type === 'object_dot') {
         const objToken = returnTokens.pop();
-        const keyToken = tokens.splice(i + 1, 1);
+        const keyToken = tokens.splice(i + 1, 1)[0];
         if (!(objToken && objToken.type === 'object')) {
           throw 'Token before dot is not object';
         }
         if (!(keyToken && keyToken.type === 'text')) {
           console.error('Token after dot is not text');
           console.error(keyToken);
+          debugger;
           throw new Error;
         }
         const objPropertyToken = {
@@ -421,9 +422,6 @@
         // Just a variable.
 
         const variableName = tokens[i].value;
-
-        console.log('Get variable', variableName);
-        console.log('My variables are', variables);
 
         if (variableName in variables) {
           const variableValue = variables[variableName].value;

@@ -2,11 +2,7 @@
 
 console.log(plt.printTokens(plt(`
 
-  x => 5
-  fn() {
-    x => 4
-    print(x)
-  }()
-  print(x)
+  x => obj()
+  x.y => 5
 
 `)));
