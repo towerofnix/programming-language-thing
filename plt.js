@@ -65,9 +65,6 @@
       // General tokens
       'type', 'value',
 
-      // Objects
-      'o',
-
       // Function call
       'name', 'args',
 
@@ -275,27 +272,36 @@
 
     let returnTokens = [];
     let i = 0;
-    let settingVariable = null;
-    let settingVariableType = null;
+    // let settingVariable = null;
+    // let settingVariableType = null;
+    let setting = [];
 
     const checkAssign = function() {
-      if (settingVariableType && returnTokens.length) {
+   // if (settingVariableType && returnTokens.length) {
+      if (setting.length && returnTokens.length) {
+        console.log('CHECKING:', returnTokens);
+        const settingA = setting.pop();
         const value = returnTokens.pop();
-        if (settingVariableType === 'return') {
+        console.log('HEY!!! value:', value);
+        // console.log('kk, returnTokens: ', returnTokens);
+        const settingData = settingA[0];
+        const settingType = settingA[1];
+        if (settingType === 'return') {
           returnTokens = [value];
-        } else if (settingVariableType === 'object_property') {
-          settingVariable[0].map.set(settingVariable[1], value);
-        } else if (settingVariableType === 'assign') {
-          variables[settingVariable] = {value};
-          settingVariableType = null;
-        } else if (settingVariableType === 'change') {
-          const variable = variables[settingVariable];
+        } else if (settingType === 'assign') {
+          variables[settingData] = {value};
+          // settingVariableType = null;
+        } else if (settingType === 'change') {
+          // const variable = variables[settingData];
           // if (value.type === variable.type) {
           //   Object.assign(variable, value);
           // }
-          variables[settingVariable].value = value;
-          settingVariableType = null;
+          variables[settingData].value = value;
+          // settingVariableType = null;
         }
+
+        console.log('aaand done, setting is', setting);
+        console.log('returnTokens is', returnTokens);
       }
     }
 
@@ -326,44 +332,18 @@
         continue;
       }
 
-      // console.log(i, tokens[i]);
+      console.log(i, tokens[i]);
+      // if (tokens[i].type === 'number' && tokens[i].value == '42') debugger;
       // console.log(tokens);
-      if (tokens[i - 1] && tokens[i] && tokens[i + 1] && tokens[i + 2] &&
-          tokens[i + 3] &&
-          tokens[i].type === 'object_dot' &&
-          tokens[i + 1].type === 'text' &&
-          tokens[i + 2].type === 'text' && tokens[i + 2].value === '->') {
-        const obj = tokens[i - 1];
-        const key = tokens[i + 1].value;
-        const val = tokens[i + 3];
-        // console.log('set', key, 'of', obj, 'to', val);
-        obj.map.set(key, val);
-        i += 4;
-        continue;
-      }
-
-      if (tokens[i - 1] && tokens[i] && tokens[i + 1] &&
-          tokens[i].type === 'object_dot' &&
-          tokens[i + 1].type === 'text') {
-        const obj = tokens[i - 1];
-        const key = tokens[i + 1].value;
-        console.log('get', key, 'of', obj);
-        debugger;
-        const value = obj.map.get(key);
-        console.log('value:', value);
-        returnTokens.pop();
-        returnTokens.push(value);
-        i += 2;
-        continue;
-      }
 
       if (tokens[i] && tokens[i + 1] &&
           tokens[i].type     === 'text' &&
           tokens[i + 1].type === 'text' && tokens[i + 1].value === '=>') {
         const variableName = tokens[i].value;
         variables[variableName] = null;
-        settingVariable = variableName;
-        settingVariableType = 'assign';
+        // settingVariable = variableName;
+        // settingVariableType = 'assign';
+        setting.push([variableName, 'assign']);
         i += 2;
         continue;
       }
@@ -451,8 +431,9 @@
           tokens.splice(i, 1, variableValue);
           continue;
         } else {
-          // console.log('variables are', variables);
-          throw `Variable ${variableName} is not defined`;
+          console.error(`Variable ${variableName} is not defined`);
+          debugger;
+          throw Error();
         }
       }
 
@@ -486,7 +467,7 @@
         }
       }),
 
-    obj: toFunctionToken(token => {
+    obj: toBuiltinFunction(token => {
         return {type: 'object', map: new Map};
       }),
 

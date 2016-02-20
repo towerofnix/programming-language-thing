@@ -1,7 +1,8 @@
-const plt = require('./plt');
+// const plt = require('./plt');
 
-plt(`
+console.log(plt.printTokens(plt(`
 
-  # Add your code here!
+  x => obj()
+  x.y
 
-`);
+`)));
