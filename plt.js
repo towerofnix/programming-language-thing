@@ -116,14 +116,14 @@ const nodeBuiltins = require('./node_builtins');
         }
       }
 
-      if (char === '.') {
+      if (char === '.' && top.type !== 'string') {
         const objectDot = {type: 'object_dot'};
         pushToken(objectDot);
         i += 1;
         continue;
       }
 
-      if (char === ':') {
+      if (char === ':' && top.type !== 'string') {
         const objectColon = {type: 'object_colon'};
         pushToken(objectColon);
         i += 1;
