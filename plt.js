@@ -1,5 +1,10 @@
 'use strict';
 
+import * as _general_builtins from './general_builtins';
+import * as _node_builtins from './node_builtins';
+const generalBuiltins = _general_builtins.builtins;
+const nodeBuiltins = _node_builtins.builtins;
+
 {
 
   // Shim a few not syntax related parts of ES7. Helps a tinny itsy bit with
@@ -34,26 +39,6 @@
 
   const isDefined = function(n) {
     return typeof n !== 'undefined';
-  };
-
-  const toFunctionToken = function(cb) {
-    return {
-      type: 'function_expr',
-      code: function(...args) {
-        // debugger;
-        const result = cb(...args);
-        // debugger;
-        if (result instanceof Array) {
-          return result;
-        } else {
-          return [result];
-        }
-      }
-    };
-  };
-
-  const toNumberToken = function(n) {
-    return {type: 'number', value: +n};
   };
 
   const toVariableToken = function(v) {
@@ -513,107 +498,14 @@
     return returnTokens;
   };
 
-  // ---
-
-  const toBuiltinFunction = function(f) {
-    return toVariableToken(toFunctionToken(f));
-  };
-
-  const builtins = {
-    print: toBuiltinFunction(token => {
-      if (token.type === 'string' || token.type === 'number') {
-        _console.log('(print)', token.value);
-      } else {
-        _console.log('(print)', token);
-      }
-    }),
-
-    obj: toBuiltinFunction(() => {
-      return {type: 'object', map: new Map};
-    }),
-
-    // Control structures -----------------------------------------------------
-    // See also: #5
-    'if': toBuiltinFunction((n, fn) => {
-      if (+n.value) {
-        callFunction(fn);
-      }
-    }),
-    ifel: toBuiltinFunction((n, ifFn, elseFn) => {
-      if (+n.value) {
-        return callFunction(ifFn);
-      } else {
-        return callFunction(elseFn);
-      }
-    }),
-
-    // Comparison operators ---------------------------------------------------
-    // See also: #6
-    gt: toBuiltinFunction((x, y) => {
-      return toNumberToken(+x.value > +y.value);
-    }),
-    lt: toBuiltinFunction((x, y) => {
-      return toNumberToken(x.value < y.value);
-    }),
-    eq: toBuiltinFunction((x, y) => {
-      return toNumberToken(x.value === y.value);
-    }),
-
-    // Boolean operators ------------------------------------------------------
-    // See also: #6
-    not: toBuiltinFunction((x) => {
-      return toNumberToken(+!+x.value);
-    }),
-    and: toBuiltinFunction((x, y) => {
-      return toNumberToken(+x.value && +y.value);
-    }),
-    or: toBuiltinFunction((x, y) => {
-      return toNumberToken(+x.value || +y.value);
-    }),
-
-    // add: toBuiltinFunction(function({ value: x }, { value: y }) {
-    add: toBuiltinFunction((x, y) => {
-      const number = +x.value + +y.value;
-      return toNumberToken(number);
-    }),
-    subtract: toBuiltinFunction((x, y) => {
-      const number = +x.value - +y.value;
-      return toNumberToken(number);
-    }),
-    multiply: toBuiltinFunction((x, y) => {
-      const number = +x.value * +y.value;
-      return toNumberToken(number);
-    }),
-    divide: toBuiltinFunction((x, y) => {
-      const number = +x.value / +y.value;
-      return toNumberToken(number);
-    }),
-    exp: toBuiltinFunction((x, y) => {
-      const number = Math.pow(+x.value, +y.value);
-      return toNumberToken(number);
-    }),
-    mod: toBuiltinFunction((x, y) => {
-      const number = x.value % y.value;
-      return toNumberToken(number);
-    })
-  };
+  const builtins = Object.assign({}, generalBuiltins, nodeBuiltins);
 
   // Builtin aliases:
-  builtins.mul = builtins.multiply;
-  builtins.sub = builtins.subtract;
-
-  const init = function(args) {
-    if (typeof args === 'undefined') args = {};
-    if (!('console' in args)) args['console'] = globalSpace.console;
-    _console = args['console'];
-  };
-
-  init();
 
   // Exports.
   const exportModule = Object.assign(function plt(code) {
     return interp(parse(code));
-  }, {parse, interp, init, printTokens});
+  }, {parse, interp, printTokens});
   const exportSpace = globalSpace;
   if (typeof module !== 'undefined') {
     module.exports = exportModule;
