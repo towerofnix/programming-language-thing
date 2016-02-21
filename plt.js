@@ -270,7 +270,13 @@
     // non-variable tokens were passed.
     for (let vName in variables) {
       const v = variables[vName];
-      variables[vName] = v.type === 'variable' ? v : toVariableToken(v);
+      if (v == undefined) {
+        delete variables[vName];
+      } else if (v.type === 'variable') {
+        variables[vName] = v;
+      } else {
+        variables[vName] = toVariableToken(v);
+      }
     }
 
     const setting = [];

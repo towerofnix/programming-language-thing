@@ -6,5 +6,8 @@
   },
   "dependencies": {
     "es7-shim": "latest"
+  },
+  "scripts": {
+    "plt": "node scripts/plt.js"
   }
 }

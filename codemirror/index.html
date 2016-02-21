@@ -24,10 +24,14 @@
         var result = '(Start running)\n';
         plt.init({
           console: {log(...what) {
-            console.log('(print)', ...what);
-            result += what.map(
-              o=>typeof o==='object'?JSON.stringify(o):o).join(', ') + '\n';
-            out.setValue(result);
+            console.log(...what);
+            try {
+              result += what.map(
+                o=>typeof o==='object'?JSON.stringify(o):o).join(', ') + '\n';
+              out.setValue(result);
+            } catch(e) {
+              console.warn('Could not print');
+            }
           }}
         });
         out.setValue(result);
