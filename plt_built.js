@@ -95,7 +95,7 @@ builtins.sub = builtins.subtract;
 
 module.exports = {builtins, init};
 
-},{"./plt_lib":3}],2:[function(require,module,exports){
+},{"./plt_lib":4}],2:[function(require,module,exports){
 const pltLib = require('./plt_lib');
 
 module.exports = {
@@ -104,40 +104,7 @@ module.exports = {
   })
 };
 
-},{"./plt_lib":3}],3:[function(require,module,exports){
-const pltLib = {
-  toFunctionToken(cb) {
-    return {
-      type: 'function_expr',
-      code: function(...args) {
-        // debugger;
-        const result = cb(...args);
-        // debugger;
-        if (result instanceof Array) {
-          return result;
-        } else {
-          return [result];
-        }
-      }
-    };
-  },
-
-  toNumberToken(n) {
-    return {type: 'number', value: +n};
-  },
-
-  toVariableToken(v) {
-    return {type: 'variable', value: v};
-  },
-
-  toBuiltinFunction(f) {
-    return pltLib.toVariableToken(pltLib.toFunctionToken(f));
-  }
-};
-
-module.exports = pltLib;
-
-},{}],4:[function(require,module,exports){
+},{"./plt_lib":4}],3:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -167,6 +134,10 @@ const nodeBuiltins = require('./node_builtins');
 
   const last = function(array) {
     return array[array.length - 1];
+  };
+
+  const includes = function(array, item) {
+    return array.indexOf(item) > -1;
   };
 
   // ---
@@ -226,7 +197,7 @@ const nodeBuiltins = require('./node_builtins');
     let t = tokens[0];
     while (true) {
       if (t && t.value instanceof Array) {
-        if (t.value.includes(pop)) {
+        if (includes(t.value, pop)) {
           return t;
         }
         const lastTokenInValue = t.value[t.value.length - 1];
@@ -640,10 +611,41 @@ const nodeBuiltins = require('./node_builtins');
   const exportModule = Object.assign(function plt(code) {
     return interp(parse(code));
   }, {parse, interp, printTokens});
-  console.log("AFLJKDSLFJKSDFLK");
   module.exports = exportModule;
-  console.log(module.exports);
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./general_builtins":1,"./node_builtins":2}]},{},[4]);
+},{"./general_builtins":1,"./node_builtins":2}],4:[function(require,module,exports){
+const pltLib = {
+  toFunctionToken(cb) {
+    return {
+      type: 'function_expr',
+      code: function(...args) {
+        // debugger;
+        const result = cb(...args);
+        // debugger;
+        if (result instanceof Array) {
+          return result;
+        } else {
+          return [result];
+        }
+      }
+    };
+  },
+
+  toNumberToken(n) {
+    return {type: 'number', value: +n};
+  },
+
+  toVariableToken(v) {
+    return {type: 'variable', value: v};
+  },
+
+  toBuiltinFunction(f) {
+    return pltLib.toVariableToken(pltLib.toFunctionToken(f));
+  }
+};
+
+module.exports = pltLib;
+
+},{}]},{},[3]);

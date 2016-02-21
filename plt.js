@@ -28,6 +28,10 @@ const nodeBuiltins = require('./node_builtins');
     return array[array.length - 1];
   };
 
+  const includes = function(array, item) {
+    return array.indexOf(item) > -1;
+  };
+
   // ---
 
   const isDefined = function(n) {
@@ -85,7 +89,7 @@ const nodeBuiltins = require('./node_builtins');
     let t = tokens[0];
     while (true) {
       if (t && t.value instanceof Array) {
-        if (t.value.includes(pop)) {
+        if (includes(t.value, pop)) {
           return t;
         }
         const lastTokenInValue = t.value[t.value.length - 1];
@@ -500,5 +504,4 @@ const nodeBuiltins = require('./node_builtins');
     return interp(parse(code));
   }, {parse, interp, printTokens});
   module.exports = exportModule;
-  console.log(module.exports);
 }
