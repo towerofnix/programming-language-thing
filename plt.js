@@ -1,95 +1,17 @@
 'use strict';
 
+require('es7-shim').shim();
+
+const pltLib = require('./plt_lib');
 const generalBuiltins = require('./general_builtins');
 const nodeBuiltins = require('./node_builtins');
 
 {
-
-  // Shim a few not syntax related parts of ES7. Helps a tinny itsy bit with
-  // compatibility.
-
-  const globalSpace = (
-    typeof window !== 'undefined' ? window :
-      typeof global !== 'undefined' ? global :
-      typeof GLOBAL !== 'undefined' ? GLOBAL :
-      {}
-  );
-
-  const deepEqual = function(x, y) {
-    // http://stackoverflow.com/a/32922084/4633828
-    return (x && y && typeof x === 'object' && typeof y === 'object') ?
-      (Object.keys(x).length === Object.keys(y).length) &&
-        Object.keys(x).reduce(function(isEqual, key) {
-          return isEqual && deepEqual(x[key], y[key]);
-        }, true) : (x === y);
-  };
-
-  const last = function(array) {
-    return array[array.length - 1];
-  };
-
-  const includes = function(array, item) {
-    return array.indexOf(item) > -1;
-  };
-
-  // ---
-
-  const isDefined = function(n) {
-    return typeof n !== 'undefined';
-  };
-
-  const toVariableToken = function(v) {
-    return {type: 'variable', value: v};
-  };
-
-  const printTokens = function(tokens, indent = 1) {
-    return JSON.stringify(tokens, [
-      // General tokens
-      'type', 'value',
-
-      // Function call
-      'name', 'args',
-
-      // Function expression
-      'args', 'code',
-
-      // Debugging
-      'done'
-    ], indent);
-  };
-
-  const callFunction = function(functionExpr, args) {
-    const functionCode = functionExpr.code;
-    // console.log('Call function', functionExpr, 'with arguments', args);
-
-    let result;
-    if (functionCode instanceof Function) {
-      result = functionCode(...args);
-    } else {
-      const functionArgs = functionExpr.args;
-      const functionScopeArgs = {};
-      // console.log('args are', args);
-      for (let [ i, argName ] of Object.entries(functionArgs)) {
-        const argValue = i in args ? args[i] : null;
-        functionScopeArgs[argName] = argValue;
-      }
-      // console.log('function scope args are', functionScopeArgs);
-
-      const functionScope = Object.assign(
-        {}, functionExpr.variables, functionScopeArgs);
-      // console.log('function scope is', functionScope);
-
-      result = interp(functionCode.value, functionScope);
-    }
-
-    return result;
-  };
-
   const topToken = function(tokens, needsChildren, pop) {
     let t = tokens[0];
     while (true) {
       if (t && t.value instanceof Array) {
-        if (includes(t.value, pop)) {
+        if (pltLib.includes(t.value, pop)) {
           return t;
         }
         const lastTokenInValue = t.value[t.value.length - 1];
@@ -161,7 +83,7 @@ const nodeBuiltins = require('./node_builtins');
           if (parentTop.type === 'paren') {
             parentTop.done = true;
           } else {
-            console.error(printTokens(tokens));
+            console.error(pltLib.printTokens(tokens));
             console.error('Invalid paren close');
             debugger;
           }
@@ -185,7 +107,7 @@ const nodeBuiltins = require('./node_builtins');
           if (top.type === 'block') {
             top.done = true;
           } else {
-            console.error(printTokens(tokens));
+            console.error(pltLib.printTokens(tokens));
             console.error('Invalid block close');
             debugger;
           }
@@ -257,7 +179,7 @@ const nodeBuiltins = require('./node_builtins');
       } else if (v.type === 'variable') {
         variables[vName] = v;
       } else {
-        variables[vName] = toVariableToken(v);
+        variables[vName] = pltLib.toVariableToken(v);
       }
     }
 
@@ -339,7 +261,7 @@ const nodeBuiltins = require('./node_builtins');
       if (tokens[i] && tokens[i + 1] &&
           tokens[i].type     === 'text' &&
           tokens[i + 1].type === 'text' && tokens[i + 1].value === '=>') {
-        if (!(last(setting) && last(setting)[1] === 'object_colon_key')) {
+        if (!(pltLib.last(setting) && pltLib.last(setting)[1] === 'object_colon_key')) {
           const variableName = tokens[i].value;
           variables[variableName] = null;
           setting.push([variableName, 'assign']);
@@ -444,9 +366,9 @@ const nodeBuiltins = require('./node_builtins');
         const functionExpr = tokens[i];
         const paren = tokens[i + 1];
         const args = interp(paren.value, variables);
-        const result = callFunction(functionExpr, args);
-        if (result.filter(isDefined).length) {
-          tokens.splice(i, 2, ...result.filter(isDefined));
+        const result = pltLib.callFunction(functionExpr, args);
+        if (result.filter(pltLib.isDefined).length) {
+          tokens.splice(i, 2, ...result.filter(pltLib.isDefined));
         } else {
           tokens.splice(i, 2);
         }
@@ -497,11 +419,12 @@ const nodeBuiltins = require('./node_builtins');
 
   const builtins = Object.assign({}, generalBuiltins.builtins, nodeBuiltins.builtins);
 
-  // Builtin aliases:
+  pltLib.initLib({interp});
 
   // Exports.
   const exportModule = Object.assign(function plt(code) {
     return interp(parse(code));
-  }, {parse, interp, printTokens});
+  }, {parse, interp});
+
   module.exports = exportModule;
 }
