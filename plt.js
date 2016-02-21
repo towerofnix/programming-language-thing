@@ -292,10 +292,10 @@
         // console.log('Data:', settingData);
         // console.log('Value:', value);
         if (settingType === 'return') {
-          console.log('Set return value to:', value);
+          // console.log('Set return value to:', value);
           returnTokens = [value];
         } else if (settingType === 'assign') {
-          variables[settingData] = {value};
+          variables[settingData] = {type: 'variable', value};
         } else if (settingType === 'change') {
           variables[settingData].value = value;
         } else if (settingType === 'object_colon_key') {
@@ -590,6 +590,10 @@
       return toNumberToken(number);
     })
   };
+
+  // Builtin aliases:
+  builtins.mul = builtins.multiply;
+  builtins.sub = builtins.subtract;
 
   const init = function(args) {
     if (typeof args === 'undefined') args = {};
