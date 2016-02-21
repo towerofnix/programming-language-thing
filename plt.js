@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 {
 
@@ -24,16 +24,16 @@
         Object.keys(x).reduce(function(isEqual, key) {
           return isEqual && deepEqual(x[key], y[key]);
         }, true) : (x === y);
-  }
+  };
+
+  const last = function(array) {
+    return array[array.length - 1];
+  };
 
   // ---
 
   const isDefined = function(n) {
     return typeof n !== 'undefined';
-  };
-
-  const isUndefined = function(n) {
-    return typeof n === 'undefined';
   };
 
   const toFunctionToken = function(cb) {
@@ -103,7 +103,7 @@
     }
 
     return result;
-  }
+  };
 
   const topToken = function(tokens, needsChildren, pop) {
     let t = tokens[0];
@@ -137,8 +137,6 @@
     let inlineComment = false;
     while (i < code.length) {
       const char = code[i];
-      const nextChar = code[i + 1];
-      const lastChar = code[i - 1];
       const parentTop = topToken(tokens, true); // top that can have children
       const top = topToken(tokens, false);
 
@@ -217,13 +215,15 @@
       }
 
       if (char === '.') {
-        // const parent = topToken(tokens, false, top);
-        // parent.value.pop(parent.value.indexOf(top));
-        // const objectDot = {type: 'object_dot', o: top};
-        // console.log("It's a dot!", printTokens(objectDot));
-        // console.log('Pop', top, 'off of', parent.value);
         const objectDot = {type: 'object_dot'};
         pushToken(objectDot);
+        i += 1;
+        continue;
+      }
+
+      if (char === ':') {
+        const objectColon = {type: 'object_colon'};
+        pushToken(objectColon);
         i += 1;
         continue;
       }
@@ -263,35 +263,54 @@
       return interp([tokens], parentVariables);
     }
 
-    // console.group('level of interp');
+    console.group('level of interp');
 
     // console.log('interp was passed variables', parentVariables);
     const variables = Object.assign({}, builtins, parentVariables);
+    const setting = [];
     // console.log(printTokens(tokens))
     // console.log('--------');
 
     let returnTokens = [];
     let i = 0;
-    let setting = [];
 
     const checkAssign = function() {
+      console.log('Setting:', setting.slice());
+      console.log('Return tokens:', returnTokens.slice());
       if (setting.length && returnTokens.length) {
         const settingA = setting.pop();
         const value = returnTokens.pop();
         const settingData = settingA[0];
         const settingType = settingA[1];
+        console.log('Got that setting data!');
+        console.log('Type:', settingType);
+        console.log('Data:', settingData);
+        console.log('Value:', value);
         if (settingType === 'return') {
           returnTokens = [value];
         } else if (settingType === 'assign') {
           variables[settingData] = {value};
         } else if (settingType === 'change') {
           variables[settingData].value = value;
+        } else if (settingType === 'object_colon_key') {
+          // Create an object_property token based on the data given as well as
+          // the return token, which should act as the key.
+          if (!(value.type === 'string')) {
+            console.error('Invalid key type:', value.type);
+            console.error('Would have attempted to use key:', value);
+            console.error('Data was:', settingData);
+            throw new Error;
+          }
+          console.log('^.^;');
+          const key = value.value;
+          const obj = settingData.obj;
+          const token = {type: 'object_property', obj, key};
+          tokens.splice(i, 0, token);
         } else if (settingType === 'object_property') {
           const obj = settingData.obj;
           const key = settingData.key;
           const map = obj.map;
           map.set(key, value);
-          // Happy!
         } else {
           console.error('Invalid setting type:', settingType);
           console.error('Would have attempted to set to value:', value);
@@ -299,9 +318,9 @@
           throw new Error;
         }
       }
-    }
+    };
 
-    while (i < tokens.length) {
+    do {
 
       checkAssign();
 
@@ -320,15 +339,26 @@
         continue;
       }
 
-      // console.log(i, tokens[i]);
+      console.log(i, tokens[i]);
       // debugger;
       if (tokens[i] && tokens[i + 1] &&
           tokens[i].type     === 'text' &&
           tokens[i + 1].type === 'text' && tokens[i + 1].value === '=>') {
-        const variableName = tokens[i].value;
-        variables[variableName] = null;
-        setting.push([variableName, 'assign']);
-        tokens.splice(i, 2);
+        if (!(last(setting) && last(setting)[1] === 'object_colon_key')) {
+          const variableName = tokens[i].value;
+          variables[variableName] = null;
+          setting.push([variableName, 'assign']);
+          tokens.splice(i, 2);
+          continue;
+        }
+      }
+
+      if (tokens[i] &&
+          tokens[i].type === 'object_colon') {
+        const objToken = returnTokens.pop();
+        setting.push([{obj: objToken, key: null}, 'object_colon_key']);
+        tokens.splice(i, 1);
+        console.log('Huh?', tokens.slice());
         continue;
       }
 
@@ -397,7 +427,8 @@
           if (argToken.type === 'text') {
             args.push(argToken.value);
           } else {
-            throw 'Invalid token inside argument list';
+            console.error('Invalid token inside argument list:', argToken);
+            throw new Error;
           }
         }
 
@@ -427,12 +458,12 @@
           tokens.splice(i, 2);
         }
         continue;
-      };
+      }
 
       if (tokens[i] && tokens[i + 1] &&
           tokens[i].type === 'text' && tokens[i].value === '^') {
         // Override return tokens with a new value;
-        settingVariableType = 'return';
+        setting.push([null, 'return']);
         tokens.splice(i, 1);
         continue;
       }
@@ -450,21 +481,21 @@
         } else {
           console.error(`Variable ${variableName} is not defined`);
           debugger;
-          throw Error();
+          throw new Error;
         }
       }
 
-      // console.log('return token:', tokens[i]);
       returnTokens.push(tokens[i]);
 
       tokens.splice(i, 1);
-    }
 
-    checkAssign();
+      checkAssign();
 
-    // console.log('returned tokens:', returnTokens);
+    } while (i < tokens.length);
 
-    // console.groupEnd('level of interp');
+    console.log('returned tokens:', returnTokens);
+
+    console.groupEnd('level of interp');
 
     return returnTokens;
   };
@@ -477,92 +508,92 @@
 
   const builtins = {
     print: toBuiltinFunction(token => {
-        if (token.type === 'string' || token.type === 'number') {
-          _console.log('(print)', token.value);
-        } else {
-          _console.log('(print)', token);
-        }
-      }),
+      if (token.type === 'string' || token.type === 'number') {
+        _console.log('(print)', token.value);
+      } else {
+        _console.log('(print)', token);
+      }
+    }),
 
-    obj: toBuiltinFunction(token => {
-        return {type: 'object', map: new Map};
-      }),
+    obj: toBuiltinFunction(() => {
+      return {type: 'object', map: new Map};
+    }),
 
     // Control structures -----------------------------------------------------
     // See also: #5
     'if': toBuiltinFunction((n, fn) => {
-        if (!!+n.value) {
-          callFunction(fn);
-        }
-      }),
+      if (+n.value) {
+        callFunction(fn);
+      }
+    }),
     ifel: toBuiltinFunction((n, ifFn, elseFn) => {
-        if (!!+n.value) {
-          return callFunction(ifFn);
-        } else {
-          return callFunction(elseFn);
-        }
-      }),
+      if (+n.value) {
+        return callFunction(ifFn);
+      } else {
+        return callFunction(elseFn);
+      }
+    }),
 
     // Comparison operators ---------------------------------------------------
     // See also: #6
     gt: toBuiltinFunction((x, y) => {
-        return toNumberToken(+x.value > +y.value);
-      }),
+      return toNumberToken(+x.value > +y.value);
+    }),
     lt: toBuiltinFunction((x, y) => {
-        return toNumberToken(x.value < y.value);
-      }),
+      return toNumberToken(x.value < y.value);
+    }),
     eq: toBuiltinFunction((x, y) => {
-        return toNumberToken(x.value === y.value);
-      }),
+      return toNumberToken(x.value === y.value);
+    }),
 
     // Boolean operators ------------------------------------------------------
     // See also: #6
     not: toBuiltinFunction((x) => {
-        return toNumberToken(+!+x.value);
-      }),
+      return toNumberToken(+!+x.value);
+    }),
     and: toBuiltinFunction((x, y) => {
-        return toNumberToken(+x.value && +y.value);
-      }),
+      return toNumberToken(+x.value && +y.value);
+    }),
     or: toBuiltinFunction((x, y) => {
-        return toNumberToken(+x.value || +y.value);
-      }),
+      return toNumberToken(+x.value || +y.value);
+    }),
 
     add: toBuiltinFunction(function({ value: x }, { value: y }) {
-        const number = (
-          parseFloat(x) +
-          parseFloat(y));
-        return toNumberToken(number);
-      }),
+      const number = (
+        parseFloat(x) +
+        parseFloat(y));
+      return toNumberToken(number);
+    }),
     subtract: toBuiltinFunction(function({ value: x }, { value: y }) {
-        const number = (
-          parseFloat(x) -
-          parseFloat(y));
-        return toNumberToken(number);
-      }),
+      const number = (
+        parseFloat(x) -
+        parseFloat(y));
+      return toNumberToken(number);
+    }),
     multiply: toBuiltinFunction(function({ value: x }, { value: y }) {
-        const number = (
-          parseFloat(x) *
-          parseFloat(y));
-        return toNumberToken(number);
-      }),
+      const number = (
+        parseFloat(x) *
+        parseFloat(y));
+      return toNumberToken(number);
+    }),
     divide: toBuiltinFunction(function({ value: x }, { value: y }) {
-        const number = (
-          parseFloat(x) /
-          parseFloat(y));
-        return toNumberToken(number);
-      }),
+      const number = (
+        parseFloat(x) /
+        parseFloat(y));
+      return toNumberToken(number);
+    }),
     exp: toBuiltinFunction(function({ value: x }, { value: y }) {
-        const number = Math.pow(
-          parseFloat(x),
-          parseFloat(y));
-        return toNumberToken(number);
-      }),
+      const number = Math.pow(
+        parseFloat(x),
+        parseFloat(y));
+      return toNumberToken(number);
+    }),
     mod: toBuiltinFunction(function({ value: x }, { value: y }) {
-        const number = (
-          parseFloat(x) %
-          parseFloat(y));
-        return toNumberToken(number);
-      })
+      const number = (
+        parseFloat(x) %
+        parseFloat(y));
+      return toNumberToken(number);
+    })
   };
 
   const init = function(args) {

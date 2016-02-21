@@ -1,0 +1,35 @@
+{
+    "env": {
+        "browser": true,
+        "es6": true,
+        "node": true
+    },
+    "extends": "eslint:recommended",
+    "rules": {
+        "no-constant-condition": [
+            0
+        ],
+        "no-console": [
+            1
+        ],
+        "no-debugger": [
+            1
+        ],
+        "indent": [
+            2,
+            2
+        ],
+        "linebreak-style": [
+            2,
+            "unix"
+        ],
+        "quotes": [
+            2,
+            "single"
+        ],
+        "semi": [
+            2,
+            "always"
+        ]
+    }
+}

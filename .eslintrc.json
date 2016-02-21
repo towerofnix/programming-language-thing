@@ -1,0 +1,19 @@
+{
+    "env": {
+        "browser": true,
+        "es6": true,
+        "node": true
+    },
+    "extends": [
+        "eslint:recommended",
+        "./.eslintrc.production.json"
+    ],
+    "rules": {
+        "no-console": [
+            0
+        ],
+        "no-debugger": [
+            0
+        ]
+    }
+}
