@@ -14,23 +14,26 @@ Add this somewhere in your HTML file:
 
 	<script src="./plt.js"></script>
 
-Now you have access to `put`, as described later.
+Now you have access to `plt`, as described later.
 
 #### In [Node.js](https://nodejs.org):
 
 First install dependencies:
 
 	npm install
+	
+Now you can run `.plt` scripts like so:
 
-Then to run the workspace area:
+	npm run plt <file>
+	# npm run plt examples/hello.plt
 
-	node --harmony --harmony_destructuring --harmony_default_parameters workspace.js
+You can `require` it in your own projects like so:
 
-You can require it like so:
+	const plt = require('./plt.js')
 
-	const put = require('./plt.js')
+Note you'll need to run `node` with these Harmony V8 arguments (to add support for ES6+):
 
-Note you'll need to run `node` with all the Harmony V8 arguments (to add support for ES2016+).
+	node --harmony --harmony_destructuring --harmony_default_parameters
 
 ## A pit (but no fall)
 
