@@ -78,10 +78,8 @@
 
   const callFunction = function(functionExpr, args) {
     const functionCode = functionExpr.code;
-
-    // console.log('function code is', functionCode);
-
     // console.log('Call function', functionExpr, 'with arguments', args);
+
     let result;
     if (functionCode instanceof Function) {
       result = functionCode(...args);
@@ -263,10 +261,17 @@
       return interp([tokens], parentVariables);
     }
 
-    console.group('level of interp');
+    // console.group('level of interp');
 
-    // console.log('interp was passed variables', parentVariables);
     const variables = Object.assign({}, builtins, parentVariables);
+
+    // Make all the passed arguments into variable tokens, just in case
+    // non-variable tokens were passed.
+    for (let vName in variables) {
+      const v = variables[vName];
+      variables[vName] = v.type === 'variable' ? v : toVariableToken(v);
+    }
+
     const setting = [];
     // console.log(printTokens(tokens))
     // console.log('--------');
@@ -275,21 +280,22 @@
     let i = 0;
 
     const checkAssign = function() {
-      console.log('Setting:', setting.slice());
-      console.log('Return tokens:', returnTokens.slice());
+      // console.log('Setting:', setting.slice());
+      // console.log('Return tokens:', returnTokens.slice());
       if (setting.length && returnTokens.length) {
         const settingA = setting.pop();
         const value = returnTokens.pop();
         const settingData = settingA[0];
         const settingType = settingA[1];
-        console.log('Got that setting data!');
-        console.log('Type:', settingType);
-        console.log('Data:', settingData);
-        console.log('Value:', value);
+        // console.log('Got that setting data!');
+        // console.log('Type:', settingType);
+        // console.log('Data:', settingData);
+        // console.log('Value:', value);
         if (settingType === 'return') {
+          // console.log('Set return value to:', value);
           returnTokens = [value];
         } else if (settingType === 'assign') {
-          variables[settingData] = {value};
+          variables[settingData] = {type: 'variable', value};
         } else if (settingType === 'change') {
           variables[settingData].value = value;
         } else if (settingType === 'object_colon_key') {
@@ -339,7 +345,7 @@
         continue;
       }
 
-      console.log(i, tokens[i]);
+      // console.log(i, tokens[i]);
       // debugger;
       if (tokens[i] && tokens[i + 1] &&
           tokens[i].type     === 'text' &&
@@ -446,14 +452,12 @@
       if (tokens[i] && tokens[i + 1] &&
           tokens[i].type     === 'function_expr' &&
           tokens[i + 1].type === 'paren') {
-        // TODO: do something related to function calling
-
         const functionExpr = tokens[i];
-        const args = interp(tokens[i + 1].value, variables);
+        const paren = tokens[i + 1];
+        const args = interp(paren.value, variables);
         const result = callFunction(functionExpr, args);
-
         if (result.filter(isDefined).length) {
-          tokens.splice(i, 2, ...result);
+          tokens.splice(i, 2, ...result.filter(isDefined));
         } else {
           tokens.splice(i, 2);
         }
@@ -474,6 +478,8 @@
 
         const variableName = tokens[i].value;
 
+        // console.log(`Get variable ${variableName} from`, variables);
+
         if (variableName in variables) {
           const variableValue = variables[variableName].value;
           tokens.splice(i, 1, variableValue);
@@ -493,9 +499,9 @@
 
     } while (i < tokens.length);
 
-    console.log('returned tokens:', returnTokens);
+    // console.log('returned tokens:', returnTokens);
 
-    console.groupEnd('level of interp');
+    // console.groupEnd('level of interp');
 
     return returnTokens;
   };
@@ -558,43 +564,36 @@
       return toNumberToken(+x.value || +y.value);
     }),
 
-    add: toBuiltinFunction(function({ value: x }, { value: y }) {
-      const number = (
-        parseFloat(x) +
-        parseFloat(y));
+    // add: toBuiltinFunction(function({ value: x }, { value: y }) {
+    add: toBuiltinFunction((x, y) => {
+      const number = +x.value + +y.value;
       return toNumberToken(number);
     }),
-    subtract: toBuiltinFunction(function({ value: x }, { value: y }) {
-      const number = (
-        parseFloat(x) -
-        parseFloat(y));
+    subtract: toBuiltinFunction((x, y) => {
+      const number = +x.value - +y.value;
       return toNumberToken(number);
     }),
-    multiply: toBuiltinFunction(function({ value: x }, { value: y }) {
-      const number = (
-        parseFloat(x) *
-        parseFloat(y));
+    multiply: toBuiltinFunction((x, y) => {
+      const number = +x.value * +y.value;
       return toNumberToken(number);
     }),
-    divide: toBuiltinFunction(function({ value: x }, { value: y }) {
-      const number = (
-        parseFloat(x) /
-        parseFloat(y));
+    divide: toBuiltinFunction((x, y) => {
+      const number = +x.value / +y.value;
       return toNumberToken(number);
     }),
-    exp: toBuiltinFunction(function({ value: x }, { value: y }) {
-      const number = Math.pow(
-        parseFloat(x),
-        parseFloat(y));
+    exp: toBuiltinFunction((x, y) => {
+      const number = Math.pow(+x.value, +y.value);
       return toNumberToken(number);
     }),
-    mod: toBuiltinFunction(function({ value: x }, { value: y }) {
-      const number = (
-        parseFloat(x) %
-        parseFloat(y));
+    mod: toBuiltinFunction((x, y) => {
+      const number = x.value % y.value;
       return toNumberToken(number);
     })
   };
+
+  // Builtin aliases:
+  builtins.mul = builtins.multiply;
+  builtins.sub = builtins.subtract;
 
   const init = function(args) {
     if (typeof args === 'undefined') args = {};
