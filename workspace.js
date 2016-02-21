@@ -1,7 +1,10 @@
-const plt = require('./plt');
+/*global plt*/
 
-plt(`
+console.log(plt(`
 
-  # Add your code here!
+  o => obj()
+  k => 'hi'
+  o:k => 5
+  print(o:k)
 
-`);
+`));

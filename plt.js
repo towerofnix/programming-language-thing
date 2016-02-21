@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 {
 
@@ -10,6 +10,12 @@
   }
 
   let _console;
+  const globalSpace = (
+    typeof window !== 'undefined' ? window :
+      typeof global !== 'undefined' ? global :
+      typeof GLOBAL !== 'undefined' ? GLOBAL :
+      {}
+  );
 
   const deepEqual = function(x, y) {
     // http://stackoverflow.com/a/32922084/4633828
@@ -18,16 +24,16 @@
         Object.keys(x).reduce(function(isEqual, key) {
           return isEqual && deepEqual(x[key], y[key]);
         }, true) : (x === y);
-  }
+  };
+
+  const last = function(array) {
+    return array[array.length - 1];
+  };
 
   // ---
 
   const isDefined = function(n) {
     return typeof n !== 'undefined';
-  };
-
-  const isUndefined = function(n) {
-    return typeof n === 'undefined';
   };
 
   const toFunctionToken = function(cb) {
@@ -48,7 +54,11 @@
 
   const toNumberToken = function(n) {
     return {type: 'number', value: +n};
-  }
+  };
+
+  const toVariableToken = function(v) {
+    return {type: 'variable', value: v};
+  };
 
   const printTokens = function(tokens, indent = 1) {
     return JSON.stringify(tokens, [
@@ -70,6 +80,8 @@
     const functionCode = functionExpr.code;
 
     // console.log('function code is', functionCode);
+
+    // console.log('Call function', functionExpr, 'with arguments', args);
     let result;
     if (functionCode instanceof Function) {
       result = functionCode(...args);
@@ -91,12 +103,15 @@
     }
 
     return result;
-  }
+  };
 
-  const topToken = function(tokens, needsChildren) {
+  const topToken = function(tokens, needsChildren, pop) {
     let t = tokens[0];
     while (true) {
       if (t && t.value instanceof Array) {
+        if (t.value.includes(pop)) {
+          return t;
+        }
         const lastTokenInValue = t.value[t.value.length - 1];
         if (needsChildren && lastTokenInValue &&
             !(lastTokenInValue.value instanceof Array)) {
@@ -118,12 +133,10 @@
       topToken(tokens, true).value.push(token);
     };
 
-    let index = 0;
+    let i = 0;
     let inlineComment = false;
-    while (index < code.length) {
-      const char = code[index];
-      const nextChar = code[index + 1];
-      const lastChar = code[index - 1];
+    while (i < code.length) {
+      const char = code[i];
       const parentTop = topToken(tokens, true); // top that can have children
       const top = topToken(tokens, false);
 
@@ -132,17 +145,15 @@
           inlineComment = false;
         }
 
-        index += 1;
+        i += 1;
         continue;
       } else {
         if (top.type !== 'string' && char === '#') {
           inlineComment = true;
-          index += 1;
+          i += 1;
           continue;
         }
       }
-
-      // console.log(index, `{${char}}`, top);
 
       if (char === ' ' || char === '\n' || char === '\t') {
         // Ignore indentation and line breaks, unless in a string.
@@ -150,7 +161,7 @@
           if (top.type === 'text' || top.type === 'number') {
             top.done = true;
           }
-          index += 1;
+          i += 1;
           continue;
         }
       }
@@ -159,7 +170,7 @@
         // Begin a paren token, unless in a string.
         if (!(top.type === 'string')) {
           pushToken({type: 'paren', value: [], done: false});
-          index += 1;
+          i += 1;
           continue;
         }
       }
@@ -170,9 +181,11 @@
           if (parentTop.type === 'paren') {
             parentTop.done = true;
           } else {
+            console.error(printTokens(tokens));
             console.error('Invalid paren close');
+            debugger;
           }
-          index += 1;
+          i += 1;
           continue;
         }
       }
@@ -181,7 +194,7 @@
         // Begin a block token, unless in a string.
         if (!(top.type === 'string')) {
           pushToken({type: 'block', value: [], done: false});
-          index += 1;
+          i += 1;
           continue;
         }
       }
@@ -192,14 +205,30 @@
           if (top.type === 'block') {
             top.done = true;
           } else {
+            console.error(printTokens(tokens));
             console.error('Invalid block close');
+            debugger;
           }
-          index += 1;
+          i += 1;
           continue;
         }
       }
 
-      if (char == '\'') {
+      if (char === '.') {
+        const objectDot = {type: 'object_dot'};
+        pushToken(objectDot);
+        i += 1;
+        continue;
+      }
+
+      if (char === ':') {
+        const objectColon = {type: 'object_colon'};
+        pushToken(objectColon);
+        i += 1;
+        continue;
+      }
+
+      if (char === '\'') {
         // If already in a string, close.
         // Else, start a string.
         if (top.type === 'string') {
@@ -207,11 +236,11 @@
         } else {
           pushToken({type: 'string', value: '', done: false});
         }
-        index += 1;
+        i += 1;
         continue;
       }
 
-      if (top.type === 'string' || top.type === 'number' || 
+      if (top.type === 'string' || top.type === 'number' ||
           top.type === 'text') {
         top.value += char;
       } else {
@@ -222,43 +251,78 @@
         }
       }
 
-      index += 1;
+      i += 1;
     }
 
     return tokens;
   };
 
   const interp = function(tokens, parentVariables) {
-    // Interpret v2.0 - Merging it all into one function.(TM)
-    // (just kidding)
-
-    // console.group('level of interp');
-
     // Allow just a token to be passed instead of an array of tokens.
     if (!(tokens instanceof Array)) {
       return interp([tokens], parentVariables);
     }
 
+    console.group('level of interp');
+
     // console.log('interp was passed variables', parentVariables);
     const variables = Object.assign({}, builtins, parentVariables);
+    const setting = [];
     // console.log(printTokens(tokens))
     // console.log('--------');
 
     let returnTokens = [];
     let i = 0;
-    let settingVariable = null;
-    while (i < tokens.length) {
 
-      // console.log(i, tokens[i]);
-      // console.log(printTokens(tokens));
-
-      if (settingVariable && returnTokens.length) {
-        if (settingVariable === Symbol.for('return')) {
-          returnTokens = [returnTokens.pop()];
+    const checkAssign = function() {
+      console.log('Setting:', setting.slice());
+      console.log('Return tokens:', returnTokens.slice());
+      if (setting.length && returnTokens.length) {
+        const settingA = setting.pop();
+        const value = returnTokens.pop();
+        const settingData = settingA[0];
+        const settingType = settingA[1];
+        console.log('Got that setting data!');
+        console.log('Type:', settingType);
+        console.log('Data:', settingData);
+        console.log('Value:', value);
+        if (settingType === 'return') {
+          returnTokens = [value];
+        } else if (settingType === 'assign') {
+          variables[settingData] = {value};
+        } else if (settingType === 'change') {
+          variables[settingData].value = value;
+        } else if (settingType === 'object_colon_key') {
+          // Create an object_property token based on the data given as well as
+          // the return token, which should act as the key.
+          if (!(value.type === 'string')) {
+            console.error('Invalid key type:', value.type);
+            console.error('Would have attempted to use key:', value);
+            console.error('Data was:', settingData);
+            throw new Error;
+          }
+          console.log('^.^;');
+          const key = value.value;
+          const obj = settingData.obj;
+          const token = {type: 'object_property', obj, key};
+          tokens.splice(i, 0, token);
+        } else if (settingType === 'object_property') {
+          const obj = settingData.obj;
+          const key = settingData.key;
+          const map = obj.map;
+          map.set(key, value);
         } else {
-          variables[settingVariable] = returnTokens.pop();
+          console.error('Invalid setting type:', settingType);
+          console.error('Would have attempted to set to value:', value);
+          console.error('Data was:', settingData);
+          throw new Error;
         }
       }
+    };
+
+    do {
+
+      checkAssign();
 
       if (tokens[i] &&
           tokens[i].type === 'holder') {
@@ -275,15 +339,79 @@
         continue;
       }
 
+      console.log(i, tokens[i]);
+      // debugger;
+      if (tokens[i] && tokens[i + 1] &&
+          tokens[i].type     === 'text' &&
+          tokens[i + 1].type === 'text' && tokens[i + 1].value === '=>') {
+        if (!(last(setting) && last(setting)[1] === 'object_colon_key')) {
+          const variableName = tokens[i].value;
+          variables[variableName] = null;
+          setting.push([variableName, 'assign']);
+          tokens.splice(i, 2);
+          continue;
+        }
+      }
+
+      if (tokens[i] &&
+          tokens[i].type === 'object_colon') {
+        const objToken = returnTokens.pop();
+        setting.push([{obj: objToken, key: null}, 'object_colon_key']);
+        tokens.splice(i, 1);
+        console.log('Huh?', tokens.slice());
+        continue;
+      }
+
+      if (tokens[i] &&
+          tokens[i].type === 'object_dot') {
+        const objToken = returnTokens.pop();
+        const keyToken = tokens.splice(i + 1, 1)[0];
+        if (!(objToken && objToken.type === 'object')) {
+          console.error('Token before dot is not object');
+          console.error(objToken);
+          debugger;
+          throw new Error;
+        }
+        if (!(keyToken && keyToken.type === 'text')) {
+          console.error('Token after dot is not text');
+          console.error(keyToken);
+          debugger;
+          throw new Error;
+        }
+        const objPropertyToken = {
+          type: 'object_property', obj: objToken, key: keyToken.value
+        };
+        tokens.splice(i, 1, objPropertyToken);
+        continue;
+      }
+
+      if (tokens[i] && tokens[i + 1] &&
+          tokens[i].type === 'object_property' &&
+          tokens[i + 1].type === 'text' && tokens[i + 1].value === '=>') {
+        const objPropertyToken = tokens[i];
+        tokens.splice(i, 2);
+        setting.push([objPropertyToken, 'object_property']);
+        continue;
+      }
+      else if (tokens[i] &&
+               tokens[i].type === 'object_property') {
+        const objPropertyToken = tokens[i];
+        // ES6 destructuring is failing me here, anybody know why? :(
+        const obj = objPropertyToken.obj;
+        const key = objPropertyToken.key;
+        const map = obj.map;
+        tokens.splice(i, 1);
+        returnTokens.push(map.get(key));
+        continue;
+      }
+
+      // Change variable, see #7
       if (tokens[i] && tokens[i + 1] &&
           tokens[i].type     === 'text' &&
           tokens[i + 1].type === 'text' && tokens[i + 1].value === '->') {
-        // Variable set, i.e. `name -> value`.
         const variableName = tokens[i].value;
-        const variableValue = tokens[i + 2];
-        variables[variableName] = null;
-        settingVariable = variableName;
-        i += 2;
+        setting.push([variableName, 'change']);
+        tokens.splice(i, 2);
         continue;
       }
 
@@ -299,7 +427,8 @@
           if (argToken.type === 'text') {
             args.push(argToken.value);
           } else {
-            throw 'Invalid token inside argument list';
+            console.error('Invalid token inside argument list:', argToken);
+            throw new Error;
           }
         }
 
@@ -320,12 +449,7 @@
         // TODO: do something related to function calling
 
         const functionExpr = tokens[i];
-        // console.log('function call:', functionExpr);
-        // console.group('argument list');
         const args = interp(tokens[i + 1].value, variables);
-        // console.groupEnd('argument list');
-        // console.log('interpreted arguments are', args);
-        // debugger;
         const result = callFunction(functionExpr, args);
 
         if (result.filter(isDefined).length) {
@@ -333,15 +457,14 @@
         } else {
           tokens.splice(i, 2);
         }
-        // i += 2;
         continue;
-      };
+      }
 
       if (tokens[i] && tokens[i + 1] &&
           tokens[i].type === 'text' && tokens[i].value === '^') {
         // Override return tokens with a new value;
-        settingVariable = Symbol.for('return');
-        i += 1;
+        setting.push([null, 'return']);
+        tokens.splice(i, 1);
         continue;
       }
 
@@ -352,118 +475,130 @@
         const variableName = tokens[i].value;
 
         if (variableName in variables) {
-          const variableValue = variables[variableName];
+          const variableValue = variables[variableName].value;
           tokens.splice(i, 1, variableValue);
           continue;
         } else {
-          console.log('variables are', variables);
-          throw `Variable ${variableName} is not defined`;
+          console.error(`Variable ${variableName} is not defined`);
+          debugger;
+          throw new Error;
         }
       }
 
       returnTokens.push(tokens[i]);
 
-      i += 1;
-    }
+      tokens.splice(i, 1);
 
-    // console.log('returned tokens:', returnTokens);
+      checkAssign();
 
-    // console.groupEnd('level of interp');
+    } while (i < tokens.length);
+
+    console.log('returned tokens:', returnTokens);
+
+    console.groupEnd('level of interp');
 
     return returnTokens;
   };
 
   // ---
 
+  const toBuiltinFunction = function(f) {
+    return toVariableToken(toFunctionToken(f));
+  };
+
   const builtins = {
-    print: toFunctionToken(token => {
-        if (token.type === 'string' || token.type === 'number') {
-          _console.log(token.value);
-        } else {
-          _console.log(token);
-        }
-      }),
+    print: toBuiltinFunction(token => {
+      if (token.type === 'string' || token.type === 'number') {
+        _console.log('(print)', token.value);
+      } else {
+        _console.log('(print)', token);
+      }
+    }),
+
+    obj: toBuiltinFunction(() => {
+      return {type: 'object', map: new Map};
+    }),
 
     // Control structures -----------------------------------------------------
     // See also: #5
-    'if': toFunctionToken((n, fn) => {
-        if (!!+n.value) {
-          callFunction(fn);
-        }
-      }),
-    ifel: toFunctionToken((n, ifFn, elseFn) => {
-        if (!!+n.value) {
-          return callFunction(ifFn);
-        } else {
-          return callFunction(elseFn);
-        }
-      }),
+    'if': toBuiltinFunction((n, fn) => {
+      if (+n.value) {
+        callFunction(fn);
+      }
+    }),
+    ifel: toBuiltinFunction((n, ifFn, elseFn) => {
+      if (+n.value) {
+        return callFunction(ifFn);
+      } else {
+        return callFunction(elseFn);
+      }
+    }),
 
     // Comparison operators ---------------------------------------------------
     // See also: #6
-    gt: toFunctionToken((x, y) => {
-        return toNumberToken(+x.value > +y.value);
-      }),
-    lt: toFunctionToken((x, y) => {
-        return toNumberToken(x.value < y.value);
-      }),
-    eq: toFunctionToken((x, y) => {
-        return toNumberToken(x.value === y.value);
-      }),
+    gt: toBuiltinFunction((x, y) => {
+      return toNumberToken(+x.value > +y.value);
+    }),
+    lt: toBuiltinFunction((x, y) => {
+      return toNumberToken(x.value < y.value);
+    }),
+    eq: toBuiltinFunction((x, y) => {
+      return toNumberToken(x.value === y.value);
+    }),
 
     // Boolean operators ------------------------------------------------------
     // See also: #6
-    not: toFunctionToken((x) => {
-        return toNumberToken(+!+x.value);
-      }),
-    and: toFunctionToken((x, y) => {
-        return toNumberToken(+x.value && +y.value);
-      }),
-    or: toFunctionToken((x, y) => {
-        return toNumberToken(+x.value || +y.value);
-      }),
+    not: toBuiltinFunction((x) => {
+      return toNumberToken(+!+x.value);
+    }),
+    and: toBuiltinFunction((x, y) => {
+      return toNumberToken(+x.value && +y.value);
+    }),
+    or: toBuiltinFunction((x, y) => {
+      return toNumberToken(+x.value || +y.value);
+    }),
 
-    add: toFunctionToken(function({ value: x }, { value: y }) {
-        const number = (
-          parseFloat(x) +
-          parseFloat(y));
-        return toNumberToken(number);
-      }),
-    subtract: toFunctionToken(function({ value: x }, { value: y }) {
-        const number = (
-          parseFloat(x) -
-          parseFloat(y));
-        return toNumberToken(number);
-      }),
-    multiply: toFunctionToken(function({ value: x }, { value: y }) {
-        const number = (
-          parseFloat(x) *
-          parseFloat(y));
-        return toNumberToken(number);
-      }),
-    divide: toFunctionToken(function({ value: x }, { value: y }) {
-        const number = (
-          parseFloat(x) /
-          parseFloat(y));
-        return toNumberToken(number);
-      }),
-    exp: toFunctionToken(function({ value: x }, { value: y }) {
-        const number = Math.pow(
-          parseFloat(x),
-          parseFloat(y));
-        return toNumberToken(number);
-      }),
-    mod: toFunctionToken(function({ value: x }, { value: y }) {
-        const number = (
-          parseFloat(x) %
-          parseFloat(y));
-        return toNumberToken(number);
-      })
+    add: toBuiltinFunction(function({ value: x }, { value: y }) {
+      const number = (
+        parseFloat(x) +
+        parseFloat(y));
+      return toNumberToken(number);
+    }),
+    subtract: toBuiltinFunction(function({ value: x }, { value: y }) {
+      const number = (
+        parseFloat(x) -
+        parseFloat(y));
+      return toNumberToken(number);
+    }),
+    multiply: toBuiltinFunction(function({ value: x }, { value: y }) {
+      const number = (
+        parseFloat(x) *
+        parseFloat(y));
+      return toNumberToken(number);
+    }),
+    divide: toBuiltinFunction(function({ value: x }, { value: y }) {
+      const number = (
+        parseFloat(x) /
+        parseFloat(y));
+      return toNumberToken(number);
+    }),
+    exp: toBuiltinFunction(function({ value: x }, { value: y }) {
+      const number = Math.pow(
+        parseFloat(x),
+        parseFloat(y));
+      return toNumberToken(number);
+    }),
+    mod: toBuiltinFunction(function({ value: x }, { value: y }) {
+      const number = (
+        parseFloat(x) %
+        parseFloat(y));
+      return toNumberToken(number);
+    })
   };
 
   const init = function(args) {
     if (typeof args === 'undefined') args = {};
-    if (!('console' in args)) args['console'] = window.console;
+    if (!('console' in args)) args['console'] = globalSpace.console;
     _console = args['console'];
   };
 
@@ -472,13 +607,8 @@
   // Exports.
   const exportModule = Object.assign(function plt(code) {
     return interp(parse(code));
-  }, {parse, interp, init});
-  const exportSpace = (
-    typeof window !== 'undefined' ? window :
-    typeof global !== 'undefined' ? global :
-    typeof GLOBAL !== 'undefined' ? GLOBAL :
-    {}
-  );
+  }, {parse, interp, init, printTokens});
+  const exportSpace = globalSpace;
   if (typeof module !== 'undefined') {
     module.exports = exportModule;
   } else if (exportSpace !== '{}') {

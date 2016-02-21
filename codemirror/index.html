@@ -20,7 +20,7 @@
         };
       }
 
-      function run(cm) {
+      function run() {
         var result = '(Start running)\n';
         plt.init({
           console: {log(...what) {
@@ -31,7 +31,7 @@
           }}
         });
         out.setValue(result);
-        var code = cm.getValue();
+        var code = editor.getValue();
         var result = plt(code);
       }
 
@@ -69,6 +69,10 @@
           localStorage.save_backup = editor.getValue();
         }
       };
+
+      if (location.hash === '#autorun') {
+        run();
+      }
     </script>
   </body>
 </html>
