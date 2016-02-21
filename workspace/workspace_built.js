@@ -1,3 +1,111 @@
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+const pltLib = require('./plt_lib');
+
+let _console;
+
+const init = function(args) {
+  if (typeof args === 'undefined') args = {};
+  if (!('console' in args)) args['console'] = console;
+  _console = args['console'];
+};
+
+init();
+
+const builtins = {
+  print: pltLib.toBuiltinFunction(token => {
+    if (token.type === 'string' || token.type === 'number') {
+      _console.log('(print)', token.value);
+    } else {
+      _console.log('(print)', token);
+    }
+  }),
+
+  obj: pltLib.toBuiltinFunction(() => {
+    return {type: 'object', map: new Map};
+  }),
+
+  // Control structures -----------------------------------------------------
+  // See also: #5
+  'if': pltLib.toBuiltinFunction((n, fn) => {
+    if (+n.value) {
+      callFunction(fn);
+    }
+  }),
+  ifel: pltLib.toBuiltinFunction((n, ifFn, elseFn) => {
+    if (+n.value) {
+      return callFunction(ifFn);
+    } else {
+      return callFunction(elseFn);
+    }
+  }),
+
+  // Comparison operators ---------------------------------------------------
+  // See also: #6
+  gt: pltLib.toBuiltinFunction((x, y) => {
+    return pltLib.toNumberToken(+x.value > +y.value);
+  }),
+  lt: pltLib.toBuiltinFunction((x, y) => {
+    return pltLib.toNumberToken(x.value < y.value);
+  }),
+  eq: pltLib.toBuiltinFunction((x, y) => {
+    return pltLib.toNumberToken(x.value === y.value);
+  }),
+
+  // Boolean operators ------------------------------------------------------
+  // See also: #6
+  not: pltLib.toBuiltinFunction((x) => {
+    return pltLib.toNumberToken(+!+x.value);
+  }),
+  and: pltLib.toBuiltinFunction((x, y) => {
+    return pltLib.toNumberToken(+x.value && +y.value);
+  }),
+  or: pltLib.toBuiltinFunction((x, y) => {
+    return pltLib.toNumberToken(+x.value || +y.value);
+  }),
+
+  // add: pltLib.toBuiltinFunction(function({ value: x }, { value: y }) {
+  add: pltLib.toBuiltinFunction((x, y) => {
+    const number = +x.value + +y.value;
+    return pltLib.toNumberToken(number);
+  }),
+  subtract: pltLib.toBuiltinFunction((x, y) => {
+    const number = +x.value - +y.value;
+    return pltLib.toNumberToken(number);
+  }),
+  multiply: pltLib.toBuiltinFunction((x, y) => {
+    const number = +x.value * +y.value;
+    return pltLib.toNumberToken(number);
+  }),
+  divide: pltLib.toBuiltinFunction((x, y) => {
+    const number = +x.value / +y.value;
+    return pltLib.toNumberToken(number);
+  }),
+  exp: pltLib.toBuiltinFunction((x, y) => {
+    const number = Math.pow(+x.value, +y.value);
+    return pltLib.toNumberToken(number);
+  }),
+  mod: pltLib.toBuiltinFunction((x, y) => {
+    const number = x.value % y.value;
+    return pltLib.toNumberToken(number);
+  })
+};
+
+builtins.mul = builtins.multiply;
+builtins.sub = builtins.subtract;
+
+module.exports = {builtins, init};
+
+},{"./plt_lib":4}],2:[function(require,module,exports){
+const pltLib = require('./plt_lib');
+
+module.exports = {
+  foo: pltLib.toFunctionToken(() => {
+    console.log('o_o;');
+  })
+};
+
+},{"./plt_lib":4}],3:[function(require,module,exports){
+(function (global){
 'use strict';
 
 const generalBuiltins = require('./general_builtins');
@@ -502,3 +610,51 @@ const nodeBuiltins = require('./node_builtins');
   module.exports = exportModule;
   console.log(module.exports);
 }
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./general_builtins":1,"./node_builtins":2}],4:[function(require,module,exports){
+const pltLib = {
+  toFunctionToken(cb) {
+    return {
+      type: 'function_expr',
+      code: function(...args) {
+        // debugger;
+        const result = cb(...args);
+        // debugger;
+        if (result instanceof Array) {
+          return result;
+        } else {
+          return [result];
+        }
+      }
+    };
+  },
+
+  toNumberToken(n) {
+    return {type: 'number', value: +n};
+  },
+
+  toVariableToken(v) {
+    return {type: 'variable', value: v};
+  },
+
+  toBuiltinFunction(f) {
+    return pltLib.toVariableToken(pltLib.toFunctionToken(f));
+  }
+};
+
+module.exports = pltLib;
+
+},{}],5:[function(require,module,exports){
+const plt = require('../plt');
+
+console.log(plt(`
+
+
+
+`));
+
+// Don't forget to build with browserify!
+// browserify workspace.js -o workspace_built.js
+
+},{"../plt":3}]},{},[5]);

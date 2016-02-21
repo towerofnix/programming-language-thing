@@ -8,6 +8,9 @@
     <h1>View the console!</h1>
     <p>You can write your own code in PLT at <a href='workspace.js'>workspace.js</a>, assuming you're running this from a local machine.</p>
     <p>Learn more about Programming Language Thing <a href='https://github.com/liam4/programming-language-thing/blob/master/README.md'>here</a>.
+    <p>Do note when you run from the browser you get separate built in functions from when you run using node.</p>
+    <p>In order to make your life easier, I've made a quick script to automatically build everything. Just use `./workspace_dev` inside of `workspace` while working on the code and you'll be set.</p>
+    <p>(The script requires <a href='http://browserify.org/'>browserify</a> and <a href='http://nodemon.io/'>nodemon</a> to be installed.)</p>
     <script>
       if (false) {
         // Separator between runs, useful for debugging.
@@ -15,7 +18,7 @@
           color: white; display: block; background: #333; padding: 10px;`);
       }
     </script>
-    <script src='plt.js'></script>
-    <script src='workspace.js'></script>
+    <script src='plt_built.js'></script>
+    <script src='workspace_built.js'></script>
   </body>
 </html>
