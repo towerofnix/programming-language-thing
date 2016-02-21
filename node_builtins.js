@@ -1,7 +1,7 @@
-import * as plt_lib from './plt_lib';
+const pltLib = require('./plt_lib');
 
-export var builtins = {
-  foo: plt_lib.toFunctionToken(() => {
+module.exports = {
+  foo: pltLib.toFunctionToken(() => {
     console.log('o_o;');
   })
 };

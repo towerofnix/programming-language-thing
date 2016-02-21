@@ -1,9 +1,7 @@
 'use strict';
 
-import * as _general_builtins from './general_builtins';
-import * as _node_builtins from './node_builtins';
-const generalBuiltins = _general_builtins.builtins;
-const nodeBuiltins = _node_builtins.builtins;
+const generalBuiltins = require('./general_builtins');
+const nodeBuiltins = require('./node_builtins');
 
 {
 
@@ -14,7 +12,6 @@ const nodeBuiltins = _node_builtins.builtins;
     shim.shim();
   }
 
-  let _console;
   const globalSpace = (
     typeof window !== 'undefined' ? window :
       typeof global !== 'undefined' ? global :
@@ -498,7 +495,7 @@ const nodeBuiltins = _node_builtins.builtins;
     return returnTokens;
   };
 
-  const builtins = Object.assign({}, generalBuiltins, nodeBuiltins);
+  const builtins = Object.assign({}, generalBuiltins.builtins, nodeBuiltins.builtins);
 
   // Builtin aliases:
 
