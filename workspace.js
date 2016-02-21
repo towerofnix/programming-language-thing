@@ -1,10 +1,10 @@
-// const plt = require('./plt');
+/*global plt*/
 
 console.log(plt(`
 
   o => obj()
-  k => 'key'
-  o:k => 'Hello!'
-  print(o.k)
+  k => 'hi'
+  o:k => 5
+  print(o:k)
 
 `));

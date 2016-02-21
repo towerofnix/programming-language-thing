@@ -26,6 +26,10 @@
         }, true) : (x === y);
   };
 
+  const last = function(array) {
+    return array[array.length - 1];
+  };
+
   // ---
 
   const isDefined = function(n) {
@@ -263,19 +267,25 @@
 
     // console.log('interp was passed variables', parentVariables);
     const variables = Object.assign({}, builtins, parentVariables);
+    const setting = [];
     // console.log(printTokens(tokens))
     // console.log('--------');
 
     let returnTokens = [];
     let i = 0;
-    let setting = [];
 
     const checkAssign = function() {
+      console.log('Setting:', setting.slice());
+      console.log('Return tokens:', returnTokens.slice());
       if (setting.length && returnTokens.length) {
         const settingA = setting.pop();
         const value = returnTokens.pop();
         const settingData = settingA[0];
         const settingType = settingA[1];
+        console.log('Got that setting data!');
+        console.log('Type:', settingType);
+        console.log('Data:', settingData);
+        console.log('Value:', value);
         if (settingType === 'return') {
           returnTokens = [value];
         } else if (settingType === 'assign') {
@@ -285,14 +295,17 @@
         } else if (settingType === 'object_colon_key') {
           // Create an object_property token based on the data given as well as
           // the return token, which should act as the key.
-          const key = value;
-          if (!(key.type === 'text')) {
-            console.error('Invalid key type:', key.type);
-            console.error('Would have attempted to use key:', key);
+          if (!(value.type === 'string')) {
+            console.error('Invalid key type:', value.type);
+            console.error('Would have attempted to use key:', value);
             console.error('Data was:', settingData);
             throw new Error;
           }
           console.log('^.^;');
+          const key = value.value;
+          const obj = settingData.obj;
+          const token = {type: 'object_property', obj, key};
+          tokens.splice(i, 0, token);
         } else if (settingType === 'object_property') {
           const obj = settingData.obj;
           const key = settingData.key;
@@ -307,7 +320,7 @@
       }
     };
 
-    while (i < tokens.length) {
+    do {
 
       checkAssign();
 
@@ -331,21 +344,21 @@
       if (tokens[i] && tokens[i + 1] &&
           tokens[i].type     === 'text' &&
           tokens[i + 1].type === 'text' && tokens[i + 1].value === '=>') {
-        const variableName = tokens[i].value;
-        variables[variableName] = null;
-        setting.push([variableName, 'assign']);
-        tokens.splice(i, 2);
-        continue;
+        if (!(last(setting) && last(setting)[1] === 'object_colon_key')) {
+          const variableName = tokens[i].value;
+          variables[variableName] = null;
+          setting.push([variableName, 'assign']);
+          tokens.splice(i, 2);
+          continue;
+        }
       }
 
       if (tokens[i] &&
           tokens[i].type === 'object_colon') {
         const objToken = returnTokens.pop();
-        const objPropertyToken = {
-          type: 'object_colon_property', obj: objToken, key: null
-        };
-        setting.push([objToken, 'object_colon_key']);
+        setting.push([{obj: objToken, key: null}, 'object_colon_key']);
         tokens.splice(i, 1);
+        console.log('Huh?', tokens.slice());
         continue;
       }
 
@@ -475,11 +488,12 @@
       returnTokens.push(tokens[i]);
 
       tokens.splice(i, 1);
-    }
 
-    checkAssign();
+      checkAssign();
 
-    // console.log('returned tokens:', returnTokens);
+    } while (i < tokens.length);
+
+    console.log('returned tokens:', returnTokens);
 
     console.groupEnd('level of interp');
 
