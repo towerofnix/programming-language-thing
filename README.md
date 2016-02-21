@@ -8,7 +8,7 @@ This is a programming language thing (PLT). I created it. It's very new and prob
 
 #### In your browser:
 
-PLT only works in Firefox Nightly from what I've tested. You can copy all the code in `plt.js` to the [babel REPL](http://babeljs.io/repl) and it should also work. If you're lazy like me you can use the sloppy CodeMirror editor I made [here](http://liam4.github.io/programming-language-thing/codemirror/). More info [here](doc/Using_the_CodeMirror_editor.md).
+PLT only works in Firefox Nightly from what I've tested. You can copy all the code in `plt.js` to the [babel REPL](http://babeljs.io/repl) and it should also work. If you're lazy like me you can use the sloppy CodeMirror editor I made [here](http://liam4.github.io/programming-language-thing/codemirror/). More info [here](doc/Using_the_CodeMirror_Editor.md).
 
 Add this somewhere in your HTML file:
 
