@@ -263,6 +263,7 @@
 
     // console.group('level of interp');
 
+    tokens = tokens.slice();
     const variables = Object.assign({}, builtins, parentVariables);
 
     // Make all the passed arguments into variable tokens, just in case
