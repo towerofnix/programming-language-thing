@@ -37,14 +37,14 @@ const nodeBuiltins = require('./node_builtins');
     };
 
     let i = 0;
-    let inlineComment = false; 
+    let inlineComment = false;
     let multilineComment = false;
-	
+
     while (i < code.length) {
       const char = code[i];
       const parentTop = topToken(tokens, true); // top that can have children
       const top = topToken(tokens, false);
-	  
+
       if (inlineComment) {
         if (char === '\n') {
           inlineComment = false;
@@ -53,22 +53,22 @@ const nodeBuiltins = require('./node_builtins');
         i += 1;
         continue;
       } else {
-	if(multilineComment) {
-	  if (top.type !== 'string' && char + code[i + 1] === ':#') {
-	    multilineComment = false;
-	  }
-	  
-	  i += 1;
-	  continue;
-	} else {
-	  if (top.type !== 'string' && char === '#') {
-	    code[i + 1] === ':' ? multilineComment = true : inlineComment = true;
+        if (multilineComment) {
+          if (top.type !== 'string' && char + code[i + 1] === ':#') {
+            multilineComment = false;
+          }
+
+          i += 1;
+          continue;
+        } else {
+          if (top.type !== 'string' && char === '#') {
+            code[i + 1] === ':' ? multilineComment = true : inlineComment = true;
             i += 1;
-	    continue;
-	  }	
-  	} 
+            continue;
+          }
+        }
       }
-	  
+
       if (char === ' ' || char === '\n' || char === '\t') {
         // Ignore indentation and line breaks, unless in a string.
         if (!(top.type === 'string')) {
