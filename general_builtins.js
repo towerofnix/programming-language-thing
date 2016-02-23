@@ -1,4 +1,10 @@
+const fs = require('fs');
+const path = require('path');
+
 const pltLib = require('./plt_lib');
+
+const PATH = path.resolve(__dirname);
+const BUILTINS = PATH + '/builtins/';
 
 let _console;
 
@@ -19,6 +25,42 @@ const builtins = {
     }
   }),
 
+  use: pltLib.toBuiltinFunction(token => {
+    if (token.type === 'string') {
+      _console.log('use ' + token.value);
+
+      let filePath;
+
+      if (fs.existsSync(token.value)) {
+        // File exists relative to running program's file.
+        filePath = path.resolve(token.value);
+      } else if (fs.existsSync(BUILTINS + token.value)) {
+        // File exists in builtins path.
+        filePath = path.resolve(BUILTINS + token.value);
+      } else {
+        // File does not exist.
+        filePath = null;
+      }
+
+      if (filePath !== null) {
+        const extension = pltLib.last(filePath.split('.'));
+        if (extension === 'js') {
+          // JavaScript file, use `require`
+          const result = require(filePath);
+          return result;
+        } else if (extension === 'plt') {
+          // PLT file, call as though it were a function
+          // TODO
+        } else {
+          // Some other file, throw error
+          console.error('Invalid imported file type:', extension);
+          console.error('Path:', filePath);
+          throw new Error;
+        }
+      }
+    }
+  }),
+
   obj: pltLib.toBuiltinFunction(() => {
     return {type: 'object', map: new Map};
   }),
@@ -27,14 +69,14 @@ const builtins = {
   // See also: #5
   'if': pltLib.toBuiltinFunction((n, fn) => {
     if (+n.value) {
-      callFunction(fn);
+      pltLib.callFunction(fn);
     }
   }),
   ifel: pltLib.toBuiltinFunction((n, ifFn, elseFn) => {
     if (+n.value) {
-      return callFunction(ifFn);
+      return pltLib.callFunction(ifFn);
     } else {
-      return callFunction(elseFn);
+      return pltLib.callFunction(elseFn);
     }
   }),
 

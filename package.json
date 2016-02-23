@@ -5,6 +5,7 @@
     "url": "https://github.com/liam4/programming-language-thing.git"
   },
   "dependencies": {
+    "console-group": "^0.2.0",
     "es7-shim": "latest"
   },
   "scripts": {

@@ -25,6 +25,14 @@ const pltLib = {
     return typeof n !== 'undefined';
   },
 
+  toObjectToken(o) {
+    const objToken = {type: 'object', map: new Map};
+    for (let key in o) {
+      objToken.map.set(key, o[key]);
+    }
+    return objToken;
+  },
+
   toFunctionToken(cb) {
     return {
       type: 'function_expr',
