@@ -167,7 +167,7 @@ const nodeBuiltins = require('./node_builtins');
 
       i += 1;
     }
-		
+
     return tokens;
   };
 
