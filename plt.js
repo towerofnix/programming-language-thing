@@ -37,8 +37,8 @@ const nodeBuiltins = require('./node_builtins');
     };
 
     let i = 0;
-    let inlineComment = false;
-	let multilineComment = false;
+    let inlineComment = false; 
+    let multilineComment = false;
 	
     while (i < code.length) {
       const char = code[i];
@@ -53,20 +53,20 @@ const nodeBuiltins = require('./node_builtins');
         i += 1;
         continue;
       } else {
-		if(multilineComment) {
-		  if (top.type !== 'string' && char + code[i + 1] === ':#') {
-		    multilineComment = false;
-		  }
-		  
-		  i += 1;
-		  continue;
-		} else {
-	      if (top.type !== 'string' && char === '#') {
-		    code[i + 1] === ':' ? multilineComment = true : inlineComment = true;
-		    i += 1;
-		    continue;
-		  }
-		} 
+	if(multilineComment) {
+	  if (top.type !== 'string' && char + code[i + 1] === ':#') {
+	    multilineComment = false;
+	  }
+	  
+	  i += 1;
+	  continue;
+	} else {
+	  if (top.type !== 'string' && char === '#') {
+	    code[i + 1] === ':' ? multilineComment = true : inlineComment = true;
+            i += 1;
+	    continue;
+	  }	
+  	} 
       }
 	  
       if (char === ' ' || char === '\n' || char === '\t') {
