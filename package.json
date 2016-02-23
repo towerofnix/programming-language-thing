@@ -5,8 +5,10 @@
     "url": "https://github.com/liam4/programming-language-thing.git"
   },
   "dependencies": {
+    "babel-preset-es2015": "^6.5.0",
+    "babel-register": "^6.5.2",
     "console-group": "^0.2.0",
-    "es7-shim": "latest"
+    "es7-shim": "^5.0.0"
   },
   "scripts": {
     "plt": "node scripts/plt.js"
