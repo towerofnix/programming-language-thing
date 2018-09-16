@@ -47,11 +47,7 @@ PLT comes with a tiny API for running programs with JavaScript.
 
 You'll probably need to build `plt.js` with Babel first, though. I'm a bit too lazy to do that for you, and if you're too lazy to do it as well, I've been developing PLT in [Firefox Nightly](https://nightly.mozilla.firefox) so opening `workspace.html` will work in that.
 
-**Using Node,** you'll need to initially run `node` with these arguments:
-
-	node --harmony --harmony_default_parameters --harmony_destructuring
-
-Then you can `require` PLT:
+**Using Node,** you can just `require` PLT:
 
 	const plt = require('path/to/plt.js');
 
@@ -102,7 +98,12 @@ Simply put, here are all the pieces of syntax that matter to you:
 
 Comments are marked by `#` and go to the end of the line.
 
-[Multi-line comment syntax has not been decided on yet.](https://github.com/liam4/programming-language-thing/issues/2)
+You can also use mulit/in-line comments, wrapping with `#:` and `:#`:
+
+    #: We aren't using this for now
+    print('hello')
+    :#
+    print('Welcome!' #: Lovely. :#)
 
 **Function expressions:** `fn(arg1 arg2 arg3...) {...}`
 
